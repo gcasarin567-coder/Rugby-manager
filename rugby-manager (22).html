@@ -1,0 +1,2618 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0a0f1a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Rugby Manager">
+<meta name="description" content="Gestione squadra di rugby">
+<link rel="manifest" id="pwa-manifest">
+<link rel="apple-touch-icon" id="apple-touch-icon">
+<title>Rugby Manager Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green: #0d4a8a;
+    --green-mid: #1565c0;
+    --green-light: #2196f3;
+    --gold: #c9a227;
+    --gold-light: #e8c04a;
+    --dirt: #8b6914;
+    --dark: #0a0f1a;
+    --dark2: #0f1825;
+    --dark3: #131e2e;
+    --surface: #162030;
+    --surface2: #1a2a3e;
+    --text: #e8edf5;
+    --text2: #9aafc8;
+    --text3: #5a7090;
+    --red: #c0392b;
+    --yellow: #f39c12;
+    --border: rgba(201,162,39,0.2);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--dark);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Background texture */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: 
+      repeating-linear-gradient(90deg, transparent, transparent 80px, rgba(255,255,255,0.012) 80px, rgba(255,255,255,0.012) 81px),
+      repeating-linear-gradient(180deg, transparent, transparent 80px, rgba(255,255,255,0.012) 80px, rgba(255,255,255,0.012) 81px);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* SIDEBAR */
+  .sidebar {
+    position: fixed; left:0; top:0; bottom:0; width:220px;
+    background: var(--dark2);
+    border-right: 1px solid var(--border);
+    display:flex; flex-direction:column;
+    z-index: 10;
+  }
+  .logo {
+    padding: 24px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .logo h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 2px;
+    color: var(--gold);
+    line-height: 1;
+  }
+  .logo span { font-size:11px; color:var(--text3); letter-spacing:3px; text-transform:uppercase; font-family:'DM Sans',sans-serif; font-weight:500; }
+  .nav { flex:1; padding:16px 0; }
+  .nav-item {
+    display:flex; align-items:center; gap:12px;
+    padding: 12px 20px;
+    cursor: pointer;
+    color: var(--text3);
+    font-size:13px; font-weight:500;
+    transition: all 0.2s;
+    border-left: 3px solid transparent;
+  }
+  .nav-item:hover { color:var(--text); background:rgba(255,255,255,0.04); }
+  .nav-item.active { color:var(--gold); background:rgba(201,162,39,0.08); border-left-color:var(--gold); }
+  .nav-item .icon { font-size:18px; width:20px; text-align:center; }
+  .sidebar-footer { padding:16px 20px; border-top:1px solid var(--border); font-size:11px; color:var(--text3); }
+  .save-btn {
+    display:flex; align-items:center; gap:8px; width:100%;
+    padding:10px 20px; background:none; border:none; color:var(--text3);
+    font-size:12px; font-family:'DM Sans',sans-serif; cursor:pointer;
+    transition:all 0.2s; text-align:left;
+  }
+  .save-btn:hover { color:var(--gold); background:rgba(201,162,39,0.08); }
+  .save-btn .icon { font-size:15px; width:20px; text-align:center; }
+
+  /* MAIN */
+  .main { margin-left:220px; min-height:100vh; position:relative; z-index:1; }
+  .topbar {
+    background: var(--dark2);
+    border-bottom: 1px solid var(--border);
+    padding: 0 32px;
+    height: 60px;
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .topbar h2 { font-family:'Bebas Neue'; font-size:22px; letter-spacing:2px; color:var(--text); }
+  .topbar-right { display:flex; align-items:center; gap:16px; }
+  .badge { background:var(--green); color:var(--gold); padding:4px 12px; border-radius:20px; font-size:11px; font-weight:600; letter-spacing:1px; }
+  
+  .content { padding:28px 32px; }
+
+  /* PAGES */
+  .page { display:none; animation: fadeIn 0.3s ease; }
+  .page.active { display:block; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+  /* CARDS */
+  .card {
+    background: var(--dark3);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 22px;
+  }
+  .card-title {
+    font-family:'Bebas Neue'; font-size:16px; letter-spacing:2px; color:var(--gold); margin-bottom:16px;
+  }
+
+  /* GRID */
+  .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+  .grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:20px; }
+  .grid-4 { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
+
+  /* STAT BOX */
+  .stat-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius:8px; padding:18px;
+    text-align:center;
+  }
+  .stat-box .num { font-family:'Bebas Neue'; font-size:42px; color:var(--gold); line-height:1; }
+  .stat-box .lbl { font-size:11px; color:var(--text3); letter-spacing:2px; text-transform:uppercase; margin-top:4px; }
+
+  /* TABLE */
+  .tbl { width:100%; border-collapse:collapse; font-size:13px; }
+  .tbl th { text-align:left; padding:10px 12px; color:var(--text3); font-size:11px; letter-spacing:1.5px; text-transform:uppercase; border-bottom:1px solid var(--border); font-weight:500; }
+  .tbl td { padding:10px 12px; border-bottom:1px solid rgba(255,255,255,0.04); vertical-align:middle; }
+  .tbl tr:last-child td { border-bottom:none; }
+  .tbl tr:hover td { background:rgba(255,255,255,0.025); }
+
+  /* PLAYER AVATAR */
+  .avatar {
+    width:32px; height:32px; border-radius:50%;
+    background: var(--green);
+    display:inline-flex; align-items:center; justify-content:center;
+    font-family:'Bebas Neue'; font-size:14px; color:var(--gold);
+    flex-shrink:0;
+  }
+  .player-cell { display:flex; align-items:center; gap:10px; }
+
+  /* PRESENCE DOTS */
+  .dot { width:10px; height:10px; border-radius:50%; display:inline-block; margin-right:3px; }
+  .dot.present { background:var(--green-light); }
+  .dot.absent { background:var(--red); }
+  .dot.justified { background:var(--yellow); }
+
+  /* BTN */
+  .btn {
+    background:var(--gold); color:var(--dark); border:none; 
+    padding:9px 18px; border-radius:6px; font-size:12px; font-weight:700;
+    letter-spacing:1px; text-transform:uppercase; cursor:pointer; transition:all 0.2s;
+    font-family:'DM Sans',sans-serif;
+  }
+  .btn:hover { background:var(--gold-light); transform:translateY(-1px); }
+  .btn.outline { background:transparent; color:var(--gold); border:1px solid var(--gold); }
+  .btn.outline:hover { background:rgba(201,162,39,0.1); }
+  .btn.danger { background:var(--red); color:#fff; }
+  .btn.sm { padding:5px 12px; font-size:11px; }
+
+  /* FORM */
+  .form-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px; }
+  .form-group { display:flex; flex-direction:column; gap:6px; }
+  .form-group label { font-size:11px; color:var(--text3); letter-spacing:1.5px; text-transform:uppercase; font-weight:500; }
+  .form-group input, .form-group select, .form-group textarea {
+    background:var(--surface2); border:1px solid rgba(255,255,255,0.1); color:var(--text);
+    padding:10px 12px; border-radius:6px; font-size:13px; font-family:'DM Sans',sans-serif;
+    outline:none; transition:border 0.2s;
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color:var(--gold); }
+  .form-group select option { background:var(--dark3); }
+
+  /* PROGRESS BAR */
+  .progress { height:6px; background:var(--surface); border-radius:3px; overflow:hidden; }
+  .progress-fill { height:100%; background: linear-gradient(90deg, var(--green-mid), var(--gold)); border-radius:3px; transition:width 0.5s ease; }
+
+  /* TAGS */
+  .tag { display:inline-block; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:600; }
+  .tag.green { background:rgba(33,150,243,0.2); color:var(--green-light); }
+  .tag.red { background:rgba(192,57,43,0.2); color:#e74c3c; }
+  .tag.yellow { background:rgba(243,156,18,0.2); color:var(--yellow); }
+  .tag.blue { background:rgba(52,152,219,0.2); color:#3498db; }
+
+  /* FIELD DIAGRAM */
+  .field {
+    background: linear-gradient(180deg, #0d4a8a 0%, #1255a0 50%, #0d4a8a 100%);
+    border-radius:8px; padding:20px;
+    position:relative; overflow:hidden;
+    min-height:300px;
+  }
+  .field::before {
+    content:'';
+    position:absolute; inset:10px;
+    border:2px solid rgba(255,255,255,0.25);
+    border-radius:4px;
+    pointer-events:none;
+  }
+  .field-line { position:absolute; background:rgba(255,255,255,0.2); }
+  .field-v { width:2px; top:0; bottom:0; left:50%; transform:translateX(-50%); }
+  .field-h22l { height:2px; left:0; right:0; top:22%; }
+  .field-h5l { height:2px; left:0; right:0; top:5%; }
+  .field-h5r { height:2px; left:0; right:0; bottom:5%; }
+
+  /* MODAL */
+  .modal-overlay {
+    display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7);
+    z-index:100; align-items:center; justify-content:center;
+  }
+  .modal-overlay.open { display:flex; }
+  .modal {
+    background:var(--dark3); border:1px solid var(--border); border-radius:12px;
+    padding:28px; width:90%; max-width:500px; max-height:90vh; overflow-y:auto;
+    animation: slideUp 0.3s ease;
+  }
+  @keyframes slideUp { from{transform:translateY(30px);opacity:0} to{transform:translateY(0);opacity:1} }
+  .modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; }
+  .modal-title { font-family:'Bebas Neue'; font-size:22px; letter-spacing:2px; color:var(--gold); }
+  .modal-close { background:none; border:none; color:var(--text3); font-size:20px; cursor:pointer; }
+
+  /* CHART BAR */
+  .bar-chart { display:flex; align-items:flex-end; gap:8px; height:120px; padding-top:10px; }
+  .bar-col { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; }
+  .bar { width:100%; background:linear-gradient(180deg,var(--gold),var(--green-mid)); border-radius:4px 4px 0 0; transition:height 0.5s ease; min-height:4px; }
+  .bar-lbl { font-size:10px; color:var(--text3); text-align:center; }
+  .bar-val { font-size:10px; color:var(--gold); font-weight:600; }
+
+  /* TOAST */
+  .toast {
+    position:fixed; bottom:24px; right:24px; z-index:200;
+    background:var(--green-mid); color:#fff; padding:12px 20px;
+    border-radius:8px; font-size:13px; font-weight:500;
+    transform:translateY(80px); opacity:0; transition:all 0.3s;
+    border-left:4px solid var(--gold);
+  }
+  .toast.show { transform:translateY(0); opacity:1; }
+
+  /* RESPONSIVE tweaks */
+  .flex-between { display:flex; justify-content:space-between; align-items:center; }
+  .mb16 { margin-bottom:16px; }
+  .mb20 { margin-bottom:20px; }
+  .mb24 { margin-bottom:24px; }
+  .gap12 { display:flex; gap:12px; flex-wrap:wrap; }
+
+  /* PRESENZA CALENDAR GRID */
+  .cal-grid {
+    display: grid;
+    gap: 6px;
+  }
+  .cal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+  .presence-row { display:grid; gap:6px; align-items:center; }
+  .pres-dot-btn { width:28px;height:28px;border-radius:50%;border:2px solid var(--surface2);cursor:pointer;transition:all 0.15s;display:flex;align-items:center;justify-content:center;font-size:12px; }
+  .pres-dot-btn.p { background:var(--green-light);border-color:var(--green-light);color:#fff; }
+  .pres-dot-btn.a { background:var(--red);border-color:var(--red);color:#fff; }
+  .pres-dot-btn.j { background:var(--yellow);border-color:var(--yellow);color:var(--dark); }
+  .pres-dot-btn.x { background:var(--surface);border-color:var(--surface);color:var(--text3); }
+
+  /* MATCH RESULT */
+  .match-card {
+    background:var(--surface); border:1px solid var(--border); border-radius:8px;
+    padding:16px 20px; display:flex; align-items:center; gap:16px;
+  }
+  .match-score { font-family:'Bebas Neue'; font-size:32px; color:var(--gold); letter-spacing:2px; }
+  .match-vs { font-size:11px; color:var(--text3); letter-spacing:2px; }
+  .match-info { flex:1; }
+  .match-result-tag { font-family:'Bebas Neue'; font-size:16px; letter-spacing:2px; }
+  .win { color:var(--green-light); }
+  .loss { color:var(--red); }
+  .draw { color:var(--yellow); }
+
+  #page-rosa .tbl .num-col { font-family:'DM Mono'; font-size:12px; color:var(--gold); }
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="logo">
+    <h1>Rugby<br>Manager</h1>
+    <span>Pro Edition</span>
+  </div>
+  <nav class="nav">
+    <div class="nav-item active" onclick="showPage('dashboard',this)"><span class="icon">⬡</span> Dashboard</div>
+    <div class="nav-item" onclick="showPage('rosa',this)"><span class="icon">👥</span> Rosa</div>
+    <div class="nav-item" onclick="showPage('presenze',this)"><span class="icon">📋</span> Presenze</div>
+    <div class="nav-item" onclick="showPage('partite',this)"><span class="icon">🏉</span> Partite</div>
+    <div class="nav-item" onclick="showPage('calendario',this)"><span class="icon">🗓️</span> Calendario</div>
+    <div class="nav-item" onclick="showPage('statistiche',this)"><span class="icon">📊</span> Statistiche</div>
+    <div class="nav-item" onclick="showPage('staff',this)"><span class="icon">🎽</span> Staff</div>
+    <div class="nav-item" onclick="showPage('formazione',this)"><span class="icon">🗺️</span> Formazione</div>
+    <div class="nav-item" onclick="showPage('scadenze',this)"><span class="icon">📅</span> Scadenze</div>
+    <div class="nav-item" onclick="showPage('quote',this)"><span class="icon">💶</span> Quote</div>
+    <div class="nav-item" onclick="openSettingsModal()"><span class="icon">⚙️</span> Impostazioni</div>
+  </nav>
+  <div style="border-top:1px solid var(--border)">
+    <button class="save-btn" onclick="exportBackup()"><span class="icon">💾</span> Esporta Backup</button>
+    <button class="save-btn" onclick="document.getElementById('import-input').click()"><span class="icon">📂</span> Importa Backup</button>
+    <input type="file" id="import-input" accept=".json" style="display:none" onchange="importData(event)">
+    <button class="save-btn" onclick="showInstallGuide()"><span class="icon">📲</span> Installa App</button>
+  </div>
+  <div class="sidebar-footer">v1.0 · Stagione <span id="footer-stagione">2024/25</span></div>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <h2 id="page-title">Dashboard</h2>
+    <div class="topbar-right">
+      <span class="badge" id="badge-serie">Serie A</span>
+      <div style="font-size:12px;color:var(--text3);cursor:pointer" id="team-name-display" onclick="openSettingsModal()">La Mia Squadra ✎</div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div id="page-dashboard" class="page active">
+      <div class="grid-4 mb24">
+        <div class="stat-box"><div class="num" id="db-giocatori">0</div><div class="lbl">Giocatori</div></div>
+        <div class="stat-box"><div class="num" id="db-vittorie">0</div><div class="lbl">Vittorie</div></div>
+        <div class="stat-box"><div class="num" id="db-sconfitte">0</div><div class="lbl">Sconfitte</div></div>
+        <div class="stat-box"><div class="num" id="db-pct" style="color:var(--green-light)">0%</div><div class="lbl">% Vittorie</div></div>
+      </div>
+
+      <div class="grid-2 mb24">
+        <div class="card">
+          <div class="card-title">Prossimi Allenamenti</div>
+          <div id="next-trainings"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Classifica</div>
+          <div id="classifica-placeholder" style="color:var(--text3);font-size:13px;text-align:center;padding:24px 0">
+            Aggiungi partite per<br>vedere la situazione W/L
+          </div>
+          <table class="tbl" id="db-classifica" style="display:none">
+            <thead><tr><th>Stagione</th><th>Pt</th><th>W</th><th>L</th><th>P</th></tr></thead>
+            <tbody id="db-classifica-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">Presenze Ultimi Allenamenti</div>
+          <div id="db-presenze-bars"><div style="color:var(--text3);font-size:13px;text-align:center;padding:24px 0">Nessun allenamento registrato</div></div>
+          <div style="font-size:11px;color:var(--text3);margin-top:16px">
+            <span class="dot present"></span> Presente &nbsp;
+            <span class="dot absent"></span> Assente &nbsp;
+            <span class="dot justified"></span> Giustificato
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Mete Ultime Partite</div>
+          <div id="db-bar-chart" class="bar-chart" style="align-items:center;justify-content:center">
+            <div style="color:var(--text3);font-size:13px">Nessuna partita registrata</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROSA -->
+    <div id="page-rosa" class="page">
+      <div class="flex-between mb24">
+        <div class="gap12">
+          <button class="btn" onclick="openModal('add-player-modal')">+ Aggiungi Giocatore</button>
+          <select style="background:var(--surface);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:6px;font-size:12px;font-family:DM Sans">
+            <option>Tutti i ruoli</option>
+            <option>Pilone</option><option>Tallonatore</option><option>Terza Linea</option>
+            <option>Mediano</option><option>Trequarti</option>
+          </select>
+        </div>
+        <div style="font-size:12px;color:var(--text3)">28 giocatori in rosa</div>
+      </div>
+      <div class="card">
+        <table class="tbl" id="player-table">
+          <thead>
+            <tr>
+              <th>#</th><th>Giocatore</th><th>Ruolo</th><th>Età</th><th>Cellulare</th><th>Tesserino</th><th>Presenze</th><th>Mete</th><th>Stato</th><th></th>
+            </tr>
+          </thead>
+          <tbody id="player-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- PRESENZE -->
+    <div id="page-presenze" class="page">
+      <div class="flex-between mb24">
+        <div class="gap12">
+          <button class="btn" onclick="openModal('add-training-modal')">+ Nuovo Allenamento</button>
+          <select id="training-select" onchange="renderPresenze()" style="background:var(--surface);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:6px;font-size:12px;font-family:DM Sans">
+          </select>
+        </div>
+        <div id="pres-stats" style="font-size:13px;color:var(--text2)"></div>
+      </div>
+      <div class="card">
+        <div id="presenze-container"></div>
+      </div>
+    </div>
+
+    <!-- PARTITE -->
+    <div id="page-partite" class="page">
+      <div class="flex-between mb24">
+        <button class="btn" onclick="openModal('add-match-modal')">+ Registra Partita</button>
+        <div style="font-size:12px;color:var(--text3)" id="matches-summary"></div>
+      </div>
+      <div id="matches-list" style="display:flex;flex-direction:column;gap:12px"></div>
+    </div>
+
+    <!-- STATISTICHE -->
+    <div id="page-statistiche" class="page">
+      <div class="grid-4 mb24">
+        <div class="stat-box"><div class="num" id="stat-mete">0</div><div class="lbl">Mete Tot.</div></div>
+        <div class="stat-box"><div class="num" id="stat-punti">0</div><div class="lbl">Punti Tot.</div></div>
+        <div class="stat-box"><div class="num" id="stat-pres">0</div><div class="lbl">Allenamenti</div></div>
+        <div class="stat-box"><div class="num" id="stat-pres-pct" style="color:var(--green-light)">0%</div><div class="lbl">Presenza Media</div></div>
+      </div>
+      <div class="grid-2 mb20">
+        <div class="card">
+          <div class="card-title">Top Marcatori</div>
+          <table class="tbl" id="top-scorers">
+            <thead><tr><th>#</th><th>Giocatore</th><th>Mete</th><th>Conv.</th><th>Punti</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="card">
+          <div class="card-title">Presenze per Giocatore</div>
+          <table class="tbl" id="presence-table">
+            <thead><tr><th>Giocatore</th><th>Presenze</th><th>%</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- STATISTICHE PERSONALIZZATE -->
+      <div class="flex-between mb16">
+        <div style="font-family:Bebas Neue;font-size:18px;letter-spacing:2px;color:var(--gold)">Statistiche Personalizzate</div>
+        <button class="btn" onclick="openModal('add-custom-stat-modal')">+ Nuova Statistica</button>
+      </div>
+      <div id="custom-stats-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px"></div>
+    </div>
+
+    <!-- CALENDARIO -->
+    <div id="page-calendario" class="page">
+
+      <div style="display:grid;grid-template-columns:1fr 340px;gap:24px;align-items:start">
+
+        <!-- COLONNA SINISTRA: CALENDARIO -->
+        <div>
+          <div class="flex-between mb16">
+            <div style="font-family:Bebas Neue;font-size:18px;letter-spacing:2px;color:var(--gold)">Calendario Stagionale</div>
+            <button class="btn" onclick="openModal('add-gara-modal')">+ Aggiungi Gara</button>
+          </div>
+          <div id="cal-list" style="display:flex;flex-direction:column;gap:10px">
+            <div class="card" style="text-align:center;padding:32px;color:var(--text3)">Nessuna gara in calendario. Clicca <strong style="color:var(--gold)">+ Aggiungi Gara</strong> per iniziare.</div>
+          </div>
+        </div>
+
+        <!-- COLONNA DESTRA: CLASSIFICA -->
+        <div style="position:sticky;top:20px">
+          <div class="flex-between mb16">
+            <div style="font-family:Bebas Neue;font-size:18px;letter-spacing:2px;color:var(--gold)">Classifica</div>
+            <button class="btn outline sm" onclick="openModal('add-squadra-modal')">+ Squadra</button>
+          </div>
+          <div class="card">
+            <div id="classifica-container">
+              <div style="color:var(--text3);font-size:13px;text-align:center;padding:20px 0">
+                Aggiungi le squadre del campionato per vedere la classifica.
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- STAFF -->
+    <div id="page-staff" class="page">
+      <div class="flex-between mb24">
+        <button class="btn" onclick="openModal('add-staff-modal')">+ Aggiungi Membro</button>
+      </div>
+      <div id="staff-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px"></div>
+    </div>
+
+    <!-- FORMAZIONE -->
+    <div id="page-formazione" class="page">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px">
+
+        <!-- TITOLARI -->
+        <div class="card">
+          <div class="flex-between mb16">
+            <div class="card-title" style="margin-bottom:0">Titolari</div>
+            <span style="font-size:11px;color:var(--text3);letter-spacing:1px">1 – 15</span>
+          </div>
+          <div id="formation-slots"></div>
+        </div>
+
+        <!-- PANCHINA -->
+        <div class="card">
+          <div class="flex-between mb16">
+            <div class="card-title" style="margin-bottom:0">Panchina</div>
+            <span style="font-size:11px;color:var(--text3);letter-spacing:1px">16 – 23</span>
+          </div>
+          <div id="bench-list"></div>
+        </div>
+
+        <!-- INDISPONIBILI -->
+        <div class="card">
+          <div class="card-title">Indisponibili</div>
+          <div id="injured-list"></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- SCADENZE -->
+    <div id="page-scadenze" class="page">
+      <div class="flex-between mb24">
+        <div class="gap12">
+          <button class="btn" onclick="openModal('add-scadenza-modal')">+ Aggiungi Scadenza</button>
+        </div>
+        <div id="scadenze-alerts" style="font-size:12px"></div>
+      </div>
+
+      <!-- AVVISI URGENTI -->
+      <div id="scadenze-urgenti" class="mb24"></div>
+
+      <!-- TABELLA VISITA MEDICA -->
+      <div class="card mb24">
+        <div class="flex-between mb16">
+          <div class="card-title" style="margin-bottom:0">🏥 Visita Medica</div>
+          <span style="font-size:11px;color:var(--text3)">Cadenza annuale obbligatoria</span>
+        </div>
+        <table class="tbl" id="tbl-visita">
+          <thead><tr><th>Giocatore</th><th>Ultima Visita</th><th>Scadenza</th><th>Stato</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <!-- TABELLA ASSICURAZIONE -->
+      <div class="card">
+        <div class="flex-between mb16">
+          <div class="card-title" style="margin-bottom:0">🛡️ Assicurazione</div>
+          <span style="font-size:11px;color:var(--text3)">Scadenza annuale</span>
+        </div>
+        <table class="tbl" id="tbl-assicurazione">
+          <thead><tr><th>Giocatore</th><th>Scadenza</th><th>Stato</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- QUOTE -->
+    <div id="page-quote" class="page">
+      <div class="flex-between mb24">
+        <div class="gap12">
+          <button class="btn" onclick="openModal('add-quota-modal')">+ Nuova Quota</button>
+        </div>
+        <div id="quote-summary" style="font-size:13px;color:var(--text2)"></div>
+      </div>
+
+      <!-- RIEPILOGO TOTALI -->
+      <div class="grid-3 mb24" id="quote-stats-boxes"></div>
+
+      <!-- LISTA QUOTE -->
+      <div id="quote-list" style="display:flex;flex-direction:column;gap:16px"></div>
+    </div>
+
+  </div><!-- /content -->
+</div>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="add-player-modal">
+  <div class="modal" style="max-width:620px">
+    <div class="modal-header">
+      <div class="modal-title" id="player-modal-title">Nuovo Giocatore</div>
+      <button class="modal-close" onclick="closeModal('add-player-modal')">✕</button>
+    </div>
+
+    <!-- TAB HEADERS -->
+    <div style="display:flex;gap:0;margin-bottom:20px;border-bottom:1px solid var(--border)">
+      <button class="ptab active" onclick="switchPTab('base',this)" style="background:none;border:none;color:var(--gold);padding:8px 16px;font-size:12px;font-family:DM Sans;font-weight:600;letter-spacing:1px;cursor:pointer;border-bottom:2px solid var(--gold);margin-bottom:-1px">DATI BASE</button>
+      <button class="ptab" onclick="switchPTab('contatti',this)" style="background:none;border:none;color:var(--text3);padding:8px 16px;font-size:12px;font-family:DM Sans;font-weight:600;letter-spacing:1px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px">CONTATTI</button>
+      <button class="ptab" onclick="switchPTab('documenti',this)" style="background:none;border:none;color:var(--text3);padding:8px 16px;font-size:12px;font-family:DM Sans;font-weight:600;letter-spacing:1px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px">DOCUMENTI</button>
+    </div>
+
+    <!-- TAB: DATI BASE -->
+    <div id="ptab-base">
+      <div class="form-row">
+        <div class="form-group"><label>Nome</label><input id="p-nome" placeholder="Marco"></div>
+        <div class="form-group"><label>Cognome</label><input id="p-cognome" placeholder="Rossi"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Numero Maglia</label><input id="p-num" type="number" placeholder="1-23"></div>
+        <div class="form-group"><label>Ruolo</label>
+          <select id="p-ruolo">
+            <option>Pilone Sinistro</option><option>Tallonatore</option><option>Pilone Destro</option>
+            <option>Seconda Linea</option><option>Flanker</option><option>N°8</option>
+            <option>Mediano di Mischia</option><option>Mediano di Apertura</option>
+            <option>Centro</option><option>Ala</option><option>Estremo</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Data di Nascita</label><input id="p-ddn" type="date"></div>
+        <div class="form-group"><label>Stato</label>
+          <select id="p-stato">
+            <option value="disponibile">Disponibile</option>
+            <option value="infortunato">Infortunato</option>
+            <option value="squalificato">Squalificato</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: CONTATTI -->
+    <div id="ptab-contatti" style="display:none">
+      <div class="form-row">
+        <div class="form-group"><label>Cellulare</label><input id="p-tel" type="tel" placeholder="+39 333 1234567"></div>
+        <div class="form-group"><label>Email</label><input id="p-email" type="email" placeholder="mario@email.it"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Numero Tesserino FIR</label><input id="p-tesserino" placeholder="Es. FIR-2024-12345"></div>
+        <div class="form-group"><label>Codice Fiscale</label><input id="p-cf" placeholder="RSSMRC95..." style="text-transform:uppercase"></div>
+      </div>
+    </div>
+
+    <!-- TAB: DOCUMENTI -->
+    <div id="ptab-documenti" style="display:none">
+      <div class="form-row">
+        <div class="form-group"><label>Tipo Documento</label>
+          <select id="p-doc-tipo">
+            <option value="ci">Carta d'Identità</option>
+            <option value="patente">Patente di Guida</option>
+            <option value="passaporto">Passaporto</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Numero Documento</label><input id="p-doc-num" placeholder="Es. CA12345AB"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Data Rilascio</label><input id="p-doc-rilascio" type="date"></div>
+        <div class="form-group"><label>Data Scadenza Documento</label><input id="p-doc-scadenza" type="date"></div>
+      </div>
+      <div style="margin-top:4px;padding:10px 12px;background:var(--surface2);border-radius:6px;font-size:11px;color:var(--text3)">
+        💡 Le scadenze di visita medica e assicurazione si gestiscono nella sezione <strong style="color:var(--gold)">Scadenze</strong>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:20px">
+      <button class="btn outline" onclick="closeModal('add-player-modal');resetPlayerModal()">Annulla</button>
+      <button class="btn" id="player-modal-btn" onclick="addPlayer()">Aggiungi</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="add-training-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Nuovo Allenamento</div>
+      <button class="modal-close" onclick="closeModal('add-training-modal')">✕</button>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Data</label><input id="t-data" type="date"></div>
+      <div class="form-group"><label>Tipo</label>
+        <select id="t-tipo"><option>Tecnico</option><option>Fisico</option><option>Tattico</option><option>Misto</option></select>
+      </div>
+    </div>
+    <div class="form-group mb16"><label>Note</label><textarea id="t-note" rows="2" placeholder="Note sull'allenamento..."></textarea></div>
+    <div style="display:flex;gap:12px;justify-content:flex-end">
+      <button class="btn outline" onclick="closeModal('add-training-modal')">Annulla</button>
+      <button class="btn" onclick="addTraining()">Crea</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="add-match-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Registra Partita</div>
+      <button class="modal-close" onclick="closeModal('add-match-modal')">✕</button>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Data</label><input id="m-data" type="date"></div>
+      <div class="form-group"><label>Avversario</label><input id="m-avv" placeholder="Nome squadra"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Punteggio Noi</label><input id="m-noi" type="number" placeholder="0"></div>
+      <div class="form-group"><label>Punteggio Loro</label><input id="m-loro" type="number" placeholder="0"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Mete Noi</label><input id="m-mete-noi" type="number" placeholder="0"></div>
+      <div class="form-group"><label>Mete Loro</label><input id="m-mete-loro" type="number" placeholder="0"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Cartellini Gialli</label><input id="m-gialli" type="number" placeholder="0"></div>
+      <div class="form-group"><label>Cartellini Rossi</label><input id="m-rossi" type="number" placeholder="0"></div>
+    </div>
+    <div class="form-group mb16"><label>Campo</label>
+      <select id="m-campo"><option>Casa</option><option>Trasferta</option></select>
+    </div>
+    <div style="display:flex;gap:12px;justify-content:flex-end">
+      <button class="btn outline" onclick="closeModal('add-match-modal')">Annulla</button>
+      <button class="btn" onclick="addMatch()">Salva</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="add-staff-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Nuovo Membro Staff</div>
+      <button class="modal-close" onclick="closeModal('add-staff-modal')">✕</button>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Nome</label><input id="s-nome" placeholder="Mario"></div>
+      <div class="form-group"><label>Cognome</label><input id="s-cognome" placeholder="Bianchi"></div>
+    </div>
+    <div class="form-group mb16"><label>Ruolo</label>
+      <select id="s-ruolo">
+        <option>Head Coach</option><option>Assistant Coach</option><option>Scrum Coach</option>
+        <option>Preparatore Fisico</option><option>Fisioterapista</option><option>Medico</option>
+        <option>Team Manager</option><option>Analyst</option>
+      </select>
+    </div>
+    <div style="display:flex;gap:12px;justify-content:flex-end">
+      <button class="btn outline" onclick="closeModal('add-staff-modal')">Annulla</button>
+      <button class="btn" onclick="addStaff()">Aggiungi</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="assign-player-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Assegna Giocatore</div>
+      <button class="modal-close" onclick="closeModal('assign-player-modal')">✕</button>
+    </div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:16px">Slot: <span id="assign-slot-label" style="color:var(--gold);font-weight:600"></span></div>
+    <div class="form-group" style="margin-bottom:20px">
+      <label>Seleziona Giocatore</label>
+      <select id="assign-player-select" style="width:100%"></select>
+    </div>
+    <div style="display:flex;gap:12px;justify-content:flex-end">
+      <button class="btn outline" onclick="closeModal('assign-player-modal');document.getElementById('assign-confirm-btn').textContent='Assegna'">Annulla</button>
+      <button class="btn" id="assign-confirm-btn" onclick="confirmAssignAll()">Assegna</button>
+    </div>
+  </div>
+</div>
+
+<!-- INSTALLA APP -->
+<div class="modal-overlay" id="install-modal">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header">
+      <div class="modal-title">📲 Installa App</div>
+      <button class="modal-close" onclick="closeModal('install-modal')">✕</button>
+    </div>
+    <div id="install-content"></div>
+  </div>
+</div>
+
+<!-- AGGIUNGI GARA CALENDARIO -->
+<div class="modal-overlay" id="add-gara-modal">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-header">
+      <div class="modal-title" id="gara-modal-title">Aggiungi Gara</div>
+      <button class="modal-close" onclick="closeModal('add-gara-modal')">✕</button>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Giornata / Turno</label>
+        <input id="g-giornata" type="number" placeholder="Es. 1" min="1">
+      </div>
+      <div class="form-group">
+        <label>Campo</label>
+        <select id="g-campo">
+          <option value="Casa">Casa</option>
+          <option value="Trasferta">Trasferta</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Avversario</label>
+        <input id="g-avv" placeholder="Nome squadra avversaria">
+      </div>
+      <div class="form-group">
+        <label>Tipo</label>
+        <select id="g-tipo">
+          <option value="campionato">Campionato</option>
+          <option value="coppa">Coppa</option>
+          <option value="amichevole">Amichevole</option>
+          <option value="playoff">Playoff</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Data</label>
+        <input id="g-data" type="date">
+      </div>
+      <div class="form-group">
+        <label>Ora</label>
+        <input id="g-ora" type="time" placeholder="15:00">
+      </div>
+    </div>
+    <div style="margin:4px 0 16px;padding:10px 12px;background:var(--surface2);border-radius:6px;font-size:11px;color:var(--text3)">
+      📝 Puoi inserire il risultato dopo che la gara è stata giocata cliccando <strong style="color:var(--gold)">✎ Risultato</strong> nel calendario.
+    </div>
+    <div style="display:flex;gap:12px;justify-content:flex-end">
+      <button class="btn outline" onclick="closeModal('add-gara-modal')">Annulla</button>
+      <button class="btn" onclick="addGara()">Salva</button>
+    </div>
+  </div>
+</div>
+
+<!-- INSERISCI RISULTATO GARA -->
+<div class="modal-overlay" id="edit-risultato-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Risultato Gara</div>
+      <button class="modal-close" onclick="closeModal('edit-risultato-modal')">✕</button>
+    </div>
+    <div id="risultato-gara-info" style="font-size:13px;color:var(--text3);margin-bottom:20px"></div>
+    <div class="form-row">
+      <div class="form-group">
+        <label id="ris-label-noi">Punti Noi</label>
+        <input id="ris-noi" type="number" min="0" placeholder="0">
+      </div>
+      <div class="form-group">
+        <label id="ris-label-loro">Punti Loro</label>
+        <input id="ris-loro" type="number" min="0" placeholder="0">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Mete Noi</label>
+        <input id="ris-mete-noi" type="number" min="0" placeholder="0">
+      </div>
+      <div class="form-group">
+        <label>Mete Loro</label>
+        <input id="ris-mete-loro" type="number" min="0" placeholder="0">
+      </div>
+    </div>
+    <div style="display:flex;gap:12px;justify-content:flex-end">
+      <button class="btn outline" onclick="closeModal('edit-risultato-modal')">Annulla</button>
+      <button class="btn" onclick="saveRisultato()">Salva Risultato</button>
+    </div>
+  </div>
+</div>
+
+<!-- AGGIUNGI SQUADRA CLASSIFICA -->
+<div class="modal-overlay" id="add-squadra-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Aggiungi Squadra</div>
+      <button class="modal-close" onclick="closeModal('add-squadra-modal')">✕</button>
+    </div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:16px">Aggiungi tutte le squadre del campionato. La classifica si calcola automaticamente in base alle partite inserite.</div>
+    <div class="form-row">
+      <div class="form-group" style="grid-column:1/-1">
+        <label>Nome Squadra</label>
+        <input id="sq-nome" placeholder="Es. Tevere Rugby">
+      </div>
+    </div>
+    <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:8px">
+      <button class="btn outline" onclick="closeModal('add-squadra-modal')">Annulla</button>
+      <button class="btn" onclick="addSquadra()">Aggiungi</button>
+    </div>
+  </div>
+</div>
+
+<!-- SCHEDA GIOCATORE DETTAGLIO -->
+<div class="modal-overlay" id="player-detail-modal">
+  <div class="modal" style="max-width:520px" id="player-detail-content"></div>
+</div>
+
+<!-- AGGIUNGI SCADENZA -->
+<div class="modal-overlay" id="add-scadenza-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Aggiungi Scadenza</div>
+      <button class="modal-close" onclick="closeModal('add-scadenza-modal')">✕</button>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Giocatore</label>
+        <select id="sc-player" style="width:100%"></select>
+      </div>
+      <div class="form-group">
+        <label>Tipo</label>
+        <select id="sc-tipo">
+          <option value="visita">Visita Medica</option>
+          <option value="assicurazione">Assicurazione</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Data Ultima Visita / Inizio</label>
+        <input id="sc-data-inizio" type="date">
+      </div>
+      <div class="form-group">
+        <label>Data Scadenza</label>
+        <input id="sc-data-scadenza" type="date">
+      </div>
+    </div>
+    <div class="form-group" style="margin-bottom:16px">
+      <label>Note</label>
+      <input id="sc-note" placeholder="Es. Medico sportivo, Rinnovo...">
+    </div>
+    <div style="display:flex;gap:12px;justify-content:flex-end">
+      <button class="btn outline" onclick="closeModal('add-scadenza-modal')">Annulla</button>
+      <button class="btn" onclick="addScadenza()">Salva</button>
+    </div>
+  </div>
+</div>
+
+<!-- NUOVA QUOTA -->
+<div class="modal-overlay" id="add-quota-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Nuova Quota</div>
+      <button class="modal-close" onclick="closeModal('add-quota-modal')">✕</button>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Nome Quota</label>
+        <input id="q-nome" placeholder="Es. Quota Annuale 2024/25">
+      </div>
+      <div class="form-group">
+        <label>Importo (€)</label>
+        <input id="q-importo" type="number" placeholder="150">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Scadenza Pagamento</label>
+        <input id="q-scadenza" type="date">
+      </div>
+      <div class="form-group">
+        <label>Anno / Stagione</label>
+        <input id="q-stagione" placeholder="Es. 2024/25">
+      </div>
+    </div>
+    <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:8px">
+      <button class="btn outline" onclick="closeModal('add-quota-modal')">Annulla</button>
+      <button class="btn" onclick="addQuota()">Crea</button>
+    </div>
+  </div>
+</div>
+
+<!-- NUOVA STATISTICA PERSONALIZZATA -->
+<div class="modal-overlay" id="add-custom-stat-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Nuova Statistica</div>
+      <button class="modal-close" onclick="closeModal('add-custom-stat-modal')">✕</button>
+    </div>
+    <div class="form-group" style="margin-bottom:16px">
+      <label>Nome Statistica</label>
+      <input id="cs-nome" placeholder="Es. Placcaggi, Calci, Cartellini...">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Unità di misura</label>
+        <input id="cs-unita" placeholder="Es. n°, km, min">
+      </div>
+      <div class="form-group">
+        <label>Tipo</label>
+        <select id="cs-tipo">
+          <option value="numero">Numero (es. placcaggi)</option>
+          <option value="classifica">Classifica giocatori</option>
+        </select>
+      </div>
+    </div>
+    <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:8px">
+      <button class="btn outline" onclick="closeModal('add-custom-stat-modal')">Annulla</button>
+      <button class="btn" onclick="addCustomStat()">Crea</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODIFICA VALORE STATISTICA -->
+<div class="modal-overlay" id="edit-stat-value-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="esv-title">Modifica Valore</div>
+      <button class="modal-close" onclick="closeModal('edit-stat-value-modal')">✕</button>
+    </div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:16px">Giocatore: <span id="esv-player" style="color:var(--gold);font-weight:600"></span></div>
+    <div class="form-group" style="margin-bottom:20px">
+      <label id="esv-label">Valore</label>
+      <input id="esv-value" type="number" min="0" placeholder="0">
+    </div>
+    <div style="display:flex;gap:12px;justify-content:flex-end">
+      <button class="btn outline" onclick="closeModal('edit-stat-value-modal')">Annulla</button>
+      <button class="btn" onclick="saveStatValue()">Salva</button>
+    </div>
+  </div>
+</div>
+<div class="modal-overlay" id="settings-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Impostazioni Squadra</div>
+      <button class="modal-close" onclick="closeModal('settings-modal')">✕</button>
+    </div>
+    <div class="form-group" style="margin-bottom:16px">
+      <label>Nome Squadra</label>
+      <input id="set-team" placeholder="Es. Rugby Club Roma">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Campionato / Serie</label>
+        <input id="set-serie" placeholder="Es. Serie A">
+      </div>
+      <div class="form-group">
+        <label>Stagione</label>
+        <input id="set-stagione" placeholder="Es. 2024/25">
+      </div>
+    </div>
+    <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:8px">
+      <button class="btn outline" onclick="closeModal('settings-modal')">Annulla</button>
+      <button class="btn" onclick="saveSettings()">Salva</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== STATE =====
+const state = {
+  players: [],
+  trainings: [],
+  matches: [],
+  staff: [],
+  settings: { team: 'La Mia Squadra', serie: 'Serie A', stagione: '2024/25' },
+  customStats: [],
+  scadenze: [],
+  quote: [],
+  calendario: [],      // {id, giornata, data, ora, avv, campo, risultatoNoi, risultatoLoro, giocata}
+  classifica: [],      // {id, squadra}  – lista squadre del campionato
+  nextId: 100,
+};
+
+// No demo data
+
+// ===== DASHBOARD =====
+function renderDashboard() {
+  const wins = state.matches.filter(m=>m.noi>m.loro).length;
+  const losses = state.matches.filter(m=>m.noi<m.loro).length;
+  const draws = state.matches.filter(m=>m.noi===m.loro).length;
+  const total = state.matches.length;
+  const pct = total>0 ? Math.round(wins/total*100) : 0;
+
+  document.getElementById("db-giocatori").textContent = state.players.length;
+  document.getElementById("db-vittorie").textContent = wins;
+  document.getElementById("db-sconfitte").textContent = losses;
+  document.getElementById("db-pct").textContent = pct + "%";
+
+  // Next trainings (last 3)
+  const tSorted = [...state.trainings].sort((a,b)=>b.data.localeCompare(a.data)).slice(0,3);
+  const ntEl = document.getElementById("next-trainings");
+  if(tSorted.length === 0) {
+    ntEl.innerHTML = "<div style='color:var(--text3);font-size:13px;text-align:center;padding:24px 0'>Nessun allenamento registrato</div>";
+  } else {
+    ntEl.innerHTML = tSorted.map((t,i) => `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:${i<tSorted.length-1?'1px solid rgba(255,255,255,0.05)':'none'}">
+      <div>
+        <div style="font-size:13px;font-weight:600">${t.tipo}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px">${t.data}${t.note?' • '+t.note:''}</div>
+      </div>
+      <span class="tag green">${t.tipo}</span>
+    </div>`).join("");
+  }
+
+  // W/L summary
+  const clEl = document.getElementById("classifica-placeholder");
+  const clTable = document.getElementById("db-classifica");
+  if(total === 0) {
+    clEl.style.display = "block"; clTable.style.display = "none";
+  } else {
+    clEl.style.display = "none"; clTable.style.display = "table";
+    document.getElementById("db-classifica-body").innerHTML = `<tr>
+      <td>Stagione corrente</td>
+      <td style="font-weight:700;color:var(--gold)">${wins*4+draws*2}</td>
+      <td style="color:var(--green-light)">${wins}</td>
+      <td style="color:var(--red)">${losses}</td>
+      <td style="color:var(--yellow)">${draws}</td>
+    </tr>`;
+  }
+
+  // Presenze bars (last 3 trainings)
+  const pbEl = document.getElementById("db-presenze-bars");
+  const recentT = [...state.trainings].sort((a,b)=>b.data.localeCompare(a.data)).slice(0,3);
+  if(recentT.length === 0 || state.players.length === 0) {
+    pbEl.innerHTML = "<div style='color:var(--text3);font-size:13px;text-align:center;padding:24px 0'>Nessun allenamento registrato</div>";
+  } else {
+    pbEl.innerHTML = recentT.map(t => {
+      const present = Object.values(t.presenze).filter(v=>v==="p").length;
+      const tot = state.players.length;
+      const pct = tot>0 ? Math.round(present/tot*100) : 0;
+      return `<div style="margin-bottom:12px">
+        <div class="flex-between" style="margin-bottom:6px">
+          <span style="font-size:12px">${t.data} – ${t.tipo}</span>
+          <span style="font-size:12px;color:var(--gold)">${present}/${tot}</span>
+        </div>
+        <div class="progress"><div class="progress-fill" style="width:${pct}%"></div></div>
+      </div>`;
+    }).join("");
+  }
+
+  // Bar chart (last 5 matches)
+  const barEl = document.getElementById("db-bar-chart");
+  const recentM = [...state.matches].sort((a,b)=>b.data.localeCompare(a.data)).slice(0,5).reverse();
+  if(recentM.length === 0) {
+    barEl.innerHTML = "<div style='color:var(--text3);font-size:13px'>Nessuna partita registrata</div>";
+    barEl.style.justifyContent = "center"; barEl.style.alignItems = "center";
+  } else {
+    barEl.style.justifyContent = ""; barEl.style.alignItems = "flex-end";
+    const maxMete = Math.max(...recentM.map(m=>m.mete_noi), 1);
+    barEl.innerHTML = recentM.map(m => {
+      const h = Math.round((m.mete_noi/maxMete)*100);
+      const month = m.data.slice(5,7)+"/"+m.data.slice(8,10);
+      return `<div class="bar-col">
+        <div class="bar-val">${m.mete_noi}</div>
+        <div class="bar" style="height:${Math.max(h,5)}%"></div>
+        <div class="bar-lbl">${month}</div>
+      </div>`;
+    }).join("");
+  }
+}
+
+// ===== NAV =====
+function showPage(page, el) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  el.classList.add('active');
+  const titles = {dashboard:'Dashboard',rosa:'Rosa',presenze:'Presenze Allenamenti',partite:'Partite',calendario:'Calendario & Classifica',statistiche:'Statistiche',staff:'Staff Tecnico',formazione:'Formazione',scadenze:'Scadenze',quote:'Quote Annuali'};
+  document.getElementById('page-title').textContent = titles[page] || page;
+  if(page==='dashboard') renderDashboard();
+  if(page==='rosa') renderRosa();
+  if(page==='presenze') renderPresenzeInit();
+  if(page==='partite') renderPartite();
+  if(page==='calendario') renderCalendario();
+  if(page==='statistiche') renderStatistiche();
+  if(page==='staff') renderStaff();
+  if(page==='formazione') renderFormazione();
+  if(page==='scadenze') renderScadenze();
+  if(page==='quote') renderQuote();
+}
+
+// ===== MODAL =====
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(m => m.addEventListener('click', e => { if(e.target===m) m.classList.remove('open'); }));
+
+// ===== TOAST =====
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2500);
+}
+
+// ===== HELPERS =====
+function age(ddn) {
+  const d = new Date(ddn), now = new Date();
+  let a = now.getFullYear()-d.getFullYear();
+  if(now.getMonth()<d.getMonth()||(now.getMonth()===d.getMonth()&&now.getDate()<d.getDate())) a--;
+  return a;
+}
+function stateTag(s) {
+  const m={disponibile:'<span class="tag green">Disponibile</span>',infortunato:'<span class="tag red">Infortunato</span>',squalificato:'<span class="tag yellow">Squalificato</span>'};
+  return m[s]||'';
+}
+function initials(p) { return (p.nome[0]+(p.cognome[0]||'')).toUpperCase(); }
+
+// ===== ROSA =====
+function renderRosa() {
+  const tbody = document.getElementById('player-tbody');
+  tbody.innerHTML = state.players.map(p => `
+    <tr>
+      <td class="num-col">${p.num}</td>
+      <td><div class="player-cell"><div class="avatar">${initials(p)}</div> ${p.nome} ${p.cognome}</div></td>
+      <td>${p.ruolo}</td>
+      <td>${age(p.ddn)}</td>
+      <td style="font-family:DM Mono;font-size:12px">${p.tel||'—'}</td>
+      <td style="font-size:11px;color:var(--text3)">${p.tesserino||'—'}</td>
+      <td>${getPlayerPresenze(p.id)} <span style="color:var(--text3);font-size:11px">/${state.trainings.length}</span></td>
+      <td style="font-family:DM Mono;color:var(--gold)">${p.mete}</td>
+      <td>${stateTag(p.stato)}</td>
+      <td>
+        <div style="display:flex;gap:6px">
+          <button class="btn outline sm" onclick="viewPlayer(${p.id})" title="Scheda">👁</button>
+          <button class="btn outline sm" onclick="openEditPlayer(${p.id})" title="Modifica">✎</button>
+          <button class="btn danger sm" onclick="removePlayer(${p.id})">✕</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+function getPlayerPresenze(pid) {
+  return state.trainings.filter(t=>t.presenze[pid]==='p').length;
+}
+function removePlayer(id) {
+  state.players = state.players.filter(p=>p.id!==id);
+  renderRosa();
+  toast('Giocatore rimosso dalla rosa');
+}
+function addPlayer() {
+  const nome=document.getElementById('p-nome').value.trim();
+  const cognome=document.getElementById('p-cognome').value.trim();
+  if(!nome||!cognome) { toast('Inserisci nome e cognome'); switchPTab('base', document.querySelector('.ptab')); return; }
+  const editId = document.getElementById('player-modal-btn').dataset.editId;
+  if(editId) {
+    // Modifica giocatore esistente
+    const p = state.players.find(p=>p.id===+editId);
+    if(p) {
+      p.nome=nome; p.cognome=cognome;
+      p.num=+document.getElementById('p-num').value||p.num;
+      p.ruolo=document.getElementById('p-ruolo').value;
+      p.ddn=document.getElementById('p-ddn').value||p.ddn;
+      p.stato=document.getElementById('p-stato').value;
+      p.tel=document.getElementById('p-tel').value.trim();
+      p.email=document.getElementById('p-email').value.trim();
+      p.tesserino=document.getElementById('p-tesserino').value.trim();
+      p.cf=document.getElementById('p-cf').value.trim().toUpperCase();
+      p.docTipo=document.getElementById('p-doc-tipo').value;
+      p.docNum=document.getElementById('p-doc-num').value.trim();
+      p.docRilascio=document.getElementById('p-doc-rilascio').value;
+      p.docScadenza=document.getElementById('p-doc-scadenza').value;
+    }
+    closeModal('add-player-modal');
+    resetPlayerModal();
+    renderRosa();
+    toast(`${nome} ${cognome} aggiornato!`);
+    return;
+  }
+  const p = {
+    id: state.nextId++,
+    nome, cognome,
+    num: +document.getElementById('p-num').value||state.players.length+1,
+    ruolo: document.getElementById('p-ruolo').value,
+    ddn: document.getElementById('p-ddn').value||'2000-01-01',
+    stato: document.getElementById('p-stato').value,
+    tel: document.getElementById('p-tel').value.trim(),
+    email: document.getElementById('p-email').value.trim(),
+    tesserino: document.getElementById('p-tesserino').value.trim(),
+    cf: document.getElementById('p-cf').value.trim().toUpperCase(),
+    docTipo: document.getElementById('p-doc-tipo').value,
+    docNum: document.getElementById('p-doc-num').value.trim(),
+    docRilascio: document.getElementById('p-doc-rilascio').value,
+    docScadenza: document.getElementById('p-doc-scadenza').value,
+    mete:0, conv:0
+  };
+  state.players.push(p);
+  state.trainings.forEach(t=>t.presenze[p.id]='x');
+  closeModal('add-player-modal');
+  resetPlayerModal();
+  renderDashboard();
+  renderRosa();
+  toast(`${nome} ${cognome} aggiunto alla rosa!`);
+}
+
+function resetPlayerModal() {
+  ['p-nome','p-cognome','p-num','p-ddn','p-tel','p-email','p-tesserino','p-cf','p-doc-num','p-doc-rilascio','p-doc-scadenza'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  document.getElementById('p-stato').value='disponibile';
+  document.getElementById('p-doc-tipo').value='ci';
+  document.getElementById('player-modal-title').textContent='Nuovo Giocatore';
+  document.getElementById('player-modal-btn').textContent='Aggiungi';
+  delete document.getElementById('player-modal-btn').dataset.editId;
+  switchPTab('base', document.querySelector('.ptab'));
+}
+
+function openEditPlayer(id) {
+  const p = state.players.find(p=>p.id===id);
+  if(!p) return;
+  document.getElementById('player-modal-title').textContent = `Modifica — ${p.nome} ${p.cognome}`;
+  document.getElementById('player-modal-btn').textContent = 'Salva Modifiche';
+  document.getElementById('player-modal-btn').dataset.editId = id;
+  // Fill all fields
+  document.getElementById('p-nome').value = p.nome||'';
+  document.getElementById('p-cognome').value = p.cognome||'';
+  document.getElementById('p-num').value = p.num||'';
+  document.getElementById('p-ruolo').value = p.ruolo||'Pilone Sinistro';
+  document.getElementById('p-ddn').value = p.ddn||'';
+  document.getElementById('p-stato').value = p.stato||'disponibile';
+  document.getElementById('p-tel').value = p.tel||'';
+  document.getElementById('p-email').value = p.email||'';
+  document.getElementById('p-tesserino').value = p.tesserino||'';
+  document.getElementById('p-cf').value = p.cf||'';
+  document.getElementById('p-doc-tipo').value = p.docTipo||'ci';
+  document.getElementById('p-doc-num').value = p.docNum||'';
+  document.getElementById('p-doc-rilascio').value = p.docRilascio||'';
+  document.getElementById('p-doc-scadenza').value = p.docScadenza||'';
+  switchPTab('base', document.querySelector('.ptab'));
+  openModal('add-player-modal');
+}
+
+function viewPlayer(id) {
+  const p = state.players.find(p=>p.id===id);
+  if(!p) return;
+  const docLabels = {ci:"Carta d'Identità", patente:'Patente', passaporto:'Passaporto'};
+  const today = new Date().toISOString().slice(0,10);
+  const docScad = p.docScadenza ? (p.docScadenza < today
+    ? `<span class="tag red">Scaduto il ${p.docScadenza}</span>`
+    : `<span class="tag green">Valido fino al ${p.docScadenza}</span>`) : '—';
+
+  function row(label, val) {
+    if(!val) return '';
+    return `<div style="display:flex;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
+      <div style="width:140px;font-size:11px;color:var(--text3);letter-spacing:0.5px;text-transform:uppercase;padding-top:1px">${label}</div>
+      <div style="flex:1;font-size:13px;font-weight:500">${val}</div>
+    </div>`;
+  }
+
+  document.getElementById('player-detail-content').innerHTML = `
+    <div class="modal-header">
+      <div style="display:flex;align-items:center;gap:14px">
+        <div style="width:52px;height:52px;border-radius:50%;background:var(--gold);color:var(--dark);display:flex;align-items:center;justify-content:center;font-family:Bebas Neue;font-size:24px">${initials(p)}</div>
+        <div>
+          <div class="modal-title">${p.nome} ${p.cognome}</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:2px">#${p.num} · ${p.ruolo}</div>
+        </div>
+      </div>
+      <button class="modal-close" onclick="closeModal('player-detail-modal')">✕</button>
+    </div>
+    <div style="margin-bottom:14px">${stateTag(p.stato)}</div>
+
+    <div style="font-family:Bebas Neue;font-size:13px;letter-spacing:2px;color:var(--gold);margin-bottom:6px">DATI PERSONALI</div>
+    ${row('Data di Nascita', p.ddn ? `${p.ddn} (${age(p.ddn)} anni)` : null)}
+    ${row('Codice Fiscale', p.cf)}
+
+    <div style="font-family:Bebas Neue;font-size:13px;letter-spacing:2px;color:var(--gold);margin:14px 0 6px">CONTATTI</div>
+    ${row('Cellulare', p.tel ? `<a href="tel:${p.tel}" style="color:var(--gold)">${p.tel}</a>` : null)}
+    ${row('Email', p.email ? `<a href="mailto:${p.email}" style="color:var(--gold)">${p.email}</a>` : null)}
+    ${row('Tesserino FIR', p.tesserino)}
+
+    <div style="font-family:Bebas Neue;font-size:13px;letter-spacing:2px;color:var(--gold);margin:14px 0 6px">DOCUMENTO</div>
+    ${row('Tipo', p.docTipo ? docLabels[p.docTipo] : null)}
+    ${row('Numero', p.docNum)}
+    ${row('Data Rilascio', p.docRilascio)}
+    ${row('Scadenza', p.docScadenza ? docScad : null)}
+
+    <div style="font-family:Bebas Neue;font-size:13px;letter-spacing:2px;color:var(--gold);margin:14px 0 6px">STAGIONE</div>
+    ${row('Presenze', `${getPlayerPresenze(p.id)}/${state.trainings.length} allenamenti`)}
+    ${row('Mete', p.mete)}
+    ${row('Trasformazioni', p.conv)}
+    ${row('Punti totali', p.mete*5+p.conv*2)}
+
+    <div style="display:flex;justify-content:flex-end;margin-top:20px">
+      <button class="btn" onclick="closeModal('player-detail-modal');openEditPlayer(${p.id})">✎ Modifica</button>
+    </div>
+  `;
+  openModal('player-detail-modal');
+}
+
+function switchPTab(tab, el) {
+  ['base','contatti','documenti'].forEach(t=>{
+    document.getElementById('ptab-'+t).style.display = t===tab?'block':'none';
+  });
+  document.querySelectorAll('.ptab').forEach(b=>{
+    b.style.color = 'var(--text3)';
+    b.style.borderBottomColor = 'transparent';
+  });
+  if(el) { el.style.color='var(--gold)'; el.style.borderBottomColor='var(--gold)'; }
+}
+
+// ===== PRESENZE =====
+function renderPresenzeInit() {
+  const sel = document.getElementById('training-select');
+  sel.innerHTML = state.trainings.map(t=>`<option value="${t.id}">${t.data} - ${t.tipo}</option>`).join('');
+  renderPresenze();
+}
+function renderPresenze() {
+  const tid = +document.getElementById('training-select').value;
+  const training = state.trainings.find(t=>t.id===tid);
+  if(!training) { document.getElementById('presenze-container').innerHTML='<p>Nessun allenamento</p>'; return; }
+  const pres = training.presenze;
+  const present = Object.values(pres).filter(v=>v==='p').length;
+  const total = state.players.length;
+  document.getElementById('pres-stats').innerHTML = 
+    `<span class="dot present"></span>${present} presenti &nbsp; <span class="dot absent"></span>${total-present-Object.values(pres).filter(v=>v==='j').length} assenti &nbsp; <span class="dot justified"></span>${Object.values(pres).filter(v=>v==='j').length} giustificati`;
+  
+  document.getElementById('presenze-container').innerHTML = `
+    <div style="margin-bottom:16px;display:flex;gap:24px;font-size:12px;color:var(--text3)">
+      <span>Clicca per cambiare stato:</span>
+      <span><span class="dot present"></span>Presente</span>
+      <span><span class="dot absent"></span>Assente</span>
+      <span><span class="dot justified"></span>Giustificato</span>
+    </div>
+    <table class="tbl">
+      <thead><tr><th>Giocatore</th><th>Ruolo</th><th>Stato</th></tr></thead>
+      <tbody>${state.players.map(p=>{
+        const s=pres[p.id]||'x';
+        const labels={p:'Presente',a:'Assente',j:'Giustificato',x:'—'};
+        const cls={p:'green',a:'red',j:'yellow',x:''};
+        return `<tr>
+          <td><div class="player-cell"><div class="avatar">${initials(p)}</div> ${p.nome} ${p.cognome}</div></td>
+          <td style="color:var(--text3)">${p.ruolo}</td>
+          <td>
+            <div style="display:flex;gap:8px">
+              <button class="pres-dot-btn ${s==='p'?'p':''}" onclick="setPres(${tid},${p.id},'p')" title="Presente">✓</button>
+              <button class="pres-dot-btn ${s==='a'?'a':''}" onclick="setPres(${tid},${p.id},'a')" title="Assente">✗</button>
+              <button class="pres-dot-btn ${s==='j'?'j':''}" onclick="setPres(${tid},${p.id},'j')" title="Giustificato">!</button>
+            </div>
+          </td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>
+  `;
+}
+function setPres(tid,pid,val) {
+  const t = state.trainings.find(t=>t.id===tid);
+  if(t) { t.presenze[pid]=val; renderPresenze(); }
+}
+function addTraining() {
+  const data=document.getElementById('t-data').value;
+  if(!data){toast('Inserisci la data');return;}
+  const t = {
+    id: state.nextId++,
+    data, tipo: document.getElementById('t-tipo').value,
+    note: document.getElementById('t-note').value,
+    presenze: {}
+  };
+  state.players.forEach(p=>t.presenze[p.id]='x');
+  state.trainings.unshift(t);
+  closeModal('add-training-modal');
+  document.getElementById('t-data').value='';
+  document.getElementById('t-note').value='';
+  renderDashboard();
+  renderPresenzeInit();
+  toast('Allenamento creato!');
+}
+
+// ===== PARTITE =====
+function renderPartite() {
+  const wins=state.matches.filter(m=>m.noi>m.loro).length;
+  const losses=state.matches.filter(m=>m.noi<m.loro).length;
+  const draws=state.matches.filter(m=>m.noi===m.loro).length;
+  document.getElementById('matches-summary').textContent=`${state.matches.length} partite · ${wins}V ${losses}S ${draws}P`;
+  document.getElementById('matches-list').innerHTML = state.matches.map(m=>{
+    const res=m.noi>m.loro?'Vittoria':m.noi<m.loro?'Sconfitta':'Pareggio';
+    const cls=m.noi>m.loro?'win':m.noi<m.loro?'loss':'draw';
+    return `<div class="match-card">
+      <div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:4px">${m.data} · ${m.campo}</div>
+        <div style="font-size:16px;font-weight:600">RC Roma vs ${m.avv}</div>
+      </div>
+      <div style="flex:1;text-align:center">
+        <div class="match-score">${m.noi} – ${m.loro}</div>
+        <div class="match-vs">${m.mete_noi} mete vs ${m.mete_loro}</div>
+      </div>
+      <div style="text-align:right">
+        <div class="match-result-tag ${cls}">${res}</div>
+        ${m.gialli>0?`<div style="font-size:11px;color:var(--yellow);margin-top:4px">🟨 ${m.gialli}</div>`:''}
+        ${m.rossi>0?`<div style="font-size:11px;color:var(--red);margin-top:4px">🟥 ${m.rossi}</div>`:''}
+      </div>
+      <button class="btn danger sm" onclick="removeMatch(${m.id})" style="margin-left:12px">✕</button>
+    </div>`;
+  }).join('');
+}
+function removeMatch(id) {
+  state.matches=state.matches.filter(m=>m.id!==id);
+  renderPartite();
+  toast('Partita rimossa');
+}
+function addMatch() {
+  const avv=document.getElementById('m-avv').value.trim();
+  const data=document.getElementById('m-data').value;
+  if(!avv||!data){toast('Compila tutti i campi');return;}
+  state.matches.unshift({
+    id:state.nextId++,data,avv,
+    noi:+document.getElementById('m-noi').value||0,
+    loro:+document.getElementById('m-loro').value||0,
+    mete_noi:+document.getElementById('m-mete-noi').value||0,
+    mete_loro:+document.getElementById('m-mete-loro').value||0,
+    gialli:+document.getElementById('m-gialli').value||0,
+    rossi:+document.getElementById('m-rossi').value||0,
+    campo:document.getElementById('m-campo').value
+  });
+  closeModal('add-match-modal');
+  ['m-avv','m-data','m-noi','m-loro','m-mete-noi','m-mete-loro','m-gialli','m-rossi'].forEach(id=>document.getElementById(id).value='');
+  renderDashboard();
+  renderPartite();
+  toast('Partita registrata!');
+}
+
+// ===== STATISTICHE =====
+function renderStatistiche() {
+  const totalMete = state.matches.reduce((s,m)=>s+m.mete_noi,0);
+  const totalPunti = state.matches.reduce((s,m)=>s+m.noi,0);
+  const totalAllen = state.trainings.length;
+  const totalPres = state.trainings.reduce((s,t)=>s+Object.values(t.presenze).filter(v=>v==='p').length,0);
+  const avgPres = totalAllen>0?Math.round(totalPres/(totalAllen*state.players.length)*100):0;
+  document.getElementById('stat-mete').textContent=totalMete;
+  document.getElementById('stat-punti').textContent=totalPunti;
+  document.getElementById('stat-pres').textContent=totalAllen;
+  document.getElementById('stat-pres-pct').textContent=avgPres+'%';
+
+  // Top scorers
+  const sorted=[...state.players].sort((a,b)=>b.mete-a.mete).slice(0,8);
+  document.querySelector('#top-scorers tbody').innerHTML=sorted.map((p,i)=>`
+    <tr>
+      <td style="font-family:Bebas Neue;color:var(--gold)">${i+1}</td>
+      <td><div class="player-cell"><div class="avatar" style="width:24px;height:24px;font-size:10px">${initials(p)}</div> ${p.nome} ${p.cognome}</div></td>
+      <td style="font-family:DM Mono">${p.mete}</td>
+      <td style="font-family:DM Mono">${p.conv}</td>
+      <td style="font-family:DM Mono;font-weight:700;color:var(--gold)">${p.mete*5+p.conv*2}</td>
+    </tr>
+  `).join('');
+
+  // Presence per player
+  const pSorted=[...state.players].sort((a,b)=>getPlayerPresenze(b.id)-getPlayerPresenze(a.id)).slice(0,10);
+  document.querySelector('#presence-table tbody').innerHTML=pSorted.map(p=>{
+    const pr=getPlayerPresenze(p.id);
+    const pct=totalAllen>0?Math.round(pr/totalAllen*100):0;
+    return `<tr>
+      <td>${p.nome} ${p.cognome}</td>
+      <td style="font-family:DM Mono">${pr}/${totalAllen}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="progress" style="width:80px"><div class="progress-fill" style="width:${pct}%"></div></div>
+          <span style="font-size:11px;color:var(--gold)">${pct}%</span>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+
+  // Custom stats
+  renderCustomStats();
+}
+
+// ===== STATISTICHE PERSONALIZZATE =====
+function addCustomStat() {
+  const nome = document.getElementById('cs-nome').value.trim();
+  if(!nome) { toast('Inserisci il nome della statistica'); return; }
+  const stat = {
+    id: state.nextId++,
+    nome,
+    unita: document.getElementById('cs-unita').value.trim() || '',
+    tipo: document.getElementById('cs-tipo').value,
+    valori: {} // { playerId: valore }
+  };
+  // Inizializza valori per tutti i giocatori a 0
+  state.players.forEach(p => stat.valori[p.id] = 0);
+  state.customStats.push(stat);
+  closeModal('add-custom-stat-modal');
+  document.getElementById('cs-nome').value = '';
+  document.getElementById('cs-unita').value = '';
+  renderCustomStats();
+  toast(`Statistica "${nome}" creata!`);
+}
+
+function renderCustomStats() {
+  const grid = document.getElementById('custom-stats-grid');
+  if(!grid) return;
+  if(state.customStats.length === 0) {
+    grid.innerHTML = `<div style="color:var(--text3);font-size:13px;padding:20px 0;grid-column:1/-1">
+      Nessuna statistica personalizzata. Clicca <strong style="color:var(--gold)">+ Nuova Statistica</strong> per aggiungerne una.
+    </div>`;
+    return;
+  }
+  grid.innerHTML = state.customStats.map(stat => {
+    // Assicura che i nuovi giocatori abbiano un valore
+    state.players.forEach(p => { if(stat.valori[p.id]===undefined) stat.valori[p.id]=0; });
+    const sorted = [...state.players].sort((a,b) => (stat.valori[b.id]||0) - (stat.valori[a.id]||0));
+    const maxVal = Math.max(...sorted.map(p=>stat.valori[p.id]||0), 1);
+
+    return `<div class="card">
+      <div class="flex-between mb16">
+        <div class="card-title" style="margin-bottom:0">${stat.nome} ${stat.unita ? '<span style="font-size:11px;color:var(--text3);font-family:DM Sans;font-weight:400">('+stat.unita+')</span>' : ''}</div>
+        <button class="btn danger sm" onclick="removeCustomStat(${stat.id})">✕ Elimina</button>
+      </div>
+      ${sorted.length === 0
+        ? `<div style="color:var(--text3);font-size:12px">Nessun giocatore in rosa</div>`
+        : sorted.map(p => {
+            const val = stat.valori[p.id] || 0;
+            const pct = Math.round((val/maxVal)*100);
+            return `<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.04)">
+              <div class="avatar" style="width:26px;height:26px;font-size:11px;flex-shrink:0">${initials(p)}</div>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:12px;font-weight:600;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.nome} ${p.cognome}</div>
+                <div class="progress"><div class="progress-fill" style="width:${pct}%"></div></div>
+              </div>
+              <div style="font-family:DM Mono;font-size:13px;color:var(--gold);font-weight:700;flex-shrink:0;min-width:32px;text-align:right">${val}</div>
+              <button class="btn outline sm" style="padding:4px 8px;font-size:11px" onclick="openEditStatValue(${stat.id},${p.id})">✎</button>
+            </div>`;
+          }).join('')
+      }
+    </div>`;
+  }).join('');
+}
+
+function removeCustomStat(sid) {
+  state.customStats = state.customStats.filter(s=>s.id!==sid);
+  renderCustomStats();
+  toast('Statistica eliminata');
+}
+
+let _editStatId = null, _editPlayerId = null;
+function openEditStatValue(sid, pid) {
+  _editStatId = sid; _editPlayerId = pid;
+  const stat = state.customStats.find(s=>s.id===sid);
+  const player = state.players.find(p=>p.id===pid);
+  if(!stat||!player) return;
+  document.getElementById('esv-title').textContent = stat.nome;
+  document.getElementById('esv-player').textContent = player.nome + ' ' + player.cognome;
+  document.getElementById('esv-label').textContent = `${stat.nome} ${stat.unita ? '('+stat.unita+')' : ''}`;
+  document.getElementById('esv-value').value = stat.valori[pid] || 0;
+  openModal('edit-stat-value-modal');
+}
+
+function saveStatValue() {
+  const stat = state.customStats.find(s=>s.id===_editStatId);
+  if(!stat) return;
+  const val = +document.getElementById('esv-value').value || 0;
+  stat.valori[_editPlayerId] = val;
+  closeModal('edit-stat-value-modal');
+  renderCustomStats();
+  toast('Valore aggiornato!');
+}
+
+// ===== STAFF =====
+function renderStaff() {
+  const roleColors={
+    'Head Coach':'gold','Assistant Coach':'green','Scrum Coach':'green',
+    'Preparatore Fisico':'blue','Fisioterapista':'blue','Medico':'red',
+    'Team Manager':'yellow','Analyst':'yellow'
+  };
+  document.getElementById('staff-grid').innerHTML=state.staff.map(s=>`
+    <div class="card" style="position:relative">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+        <div class="avatar" style="width:44px;height:44px;font-size:18px">${(s.nome[0]+s.cognome[0]).toUpperCase()}</div>
+        <div>
+          <div style="font-weight:600;font-size:14px">${s.nome} ${s.cognome}</div>
+          <div style="font-size:11px;color:var(--gold);margin-top:2px">${s.ruolo}</div>
+        </div>
+      </div>
+      <button class="btn danger sm" style="position:absolute;top:16px;right:16px" onclick="removeStaff(${s.id})">✕</button>
+    </div>
+  `).join('');
+}
+function removeStaff(id) { state.staff=state.staff.filter(s=>s.id!==id); renderStaff(); toast('Rimosso dallo staff'); }
+function addStaff() {
+  const nome=document.getElementById('s-nome').value.trim();
+  const cognome=document.getElementById('s-cognome').value.trim();
+  if(!nome||!cognome){toast('Inserisci nome e cognome');return;}
+  state.staff.push({id:state.nextId++,nome,cognome,ruolo:document.getElementById('s-ruolo').value});
+  closeModal('add-staff-modal');
+  document.getElementById('s-nome').value='';document.getElementById('s-cognome').value='';
+  renderStaff();toast('Membro dello staff aggiunto!');
+}
+
+// ===== FORMAZIONE =====
+function renderFormazione() {
+  const starters = [
+    {num:1, ruolo:'Pilone Sinistro'},
+    {num:2, ruolo:'Tallonatore'},
+    {num:3, ruolo:'Pilone Destro'},
+    {num:4, ruolo:'Seconda Linea'},
+    {num:5, ruolo:'Seconda Linea'},
+    {num:6, ruolo:'Flanker'},
+    {num:7, ruolo:'Flanker'},
+    {num:8, ruolo:'N°8'},
+    {num:9, ruolo:'Mediano di Mischia'},
+    {num:10,ruolo:'Mediano di Apertura'},
+    {num:11,ruolo:'Ala Sinistra'},
+    {num:12,ruolo:'Centro'},
+    {num:13,ruolo:'Centro'},
+    {num:14,ruolo:'Ala Destra'},
+    {num:15,ruolo:'Estremo'},
+  ];
+
+  const container = document.getElementById('formation-slots');
+  container.innerHTML = starters.map(s => {
+    const player = state.players.find(p=>p.num===s.num);
+    const hp = !!player;
+    return `<div style="display:flex;align-items:center;gap:14px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
+      <div style="width:36px;height:36px;border-radius:50%;background:${hp?'var(--gold)':'var(--surface2)'};color:${hp?'var(--dark)':'var(--text3)'};display:flex;align-items:center;justify-content:center;font-family:Bebas Neue;font-size:18px;flex-shrink:0;border:2px solid ${hp?'var(--gold-light)':'rgba(255,255,255,0.08)'}">${s.num}</div>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:600;color:${hp?'var(--text)':'var(--text3)'}">${hp ? player.nome+' '+player.cognome : '— Slot libero'}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:1px">${s.ruolo}</div>
+      </div>
+      ${hp
+        ? `<button class="btn outline sm" onclick="removeFromFormazione(${s.num})">✕</button>`
+        : `<button class="btn sm" onclick="openAssignModal(${s.num},'${s.ruolo}')">+ Assegna</button>`
+      }
+    </div>`;
+  }).join('');
+
+  // Bench (16-23)
+  const bench = state.players.filter(p=>p.num>=16&&p.num<=23&&p.stato==='disponibile');
+  const injured = state.players.filter(p=>p.stato==='infortunato'||p.stato==='squalificato');
+
+  // PANCHINA
+  const benchSlots = [16,17,18,19,20,21,22,23];
+  document.getElementById('bench-list').innerHTML = benchSlots.map(n => {
+    const player = state.players.find(p=>p.num===n);
+    const hp = !!player;
+    return `<div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
+      <div style="width:30px;height:30px;border-radius:50%;background:${hp?'var(--surface2)':'var(--surface)'};color:${hp?'var(--text2)':'var(--text3)'};display:flex;align-items:center;justify-content:center;font-family:Bebas Neue;font-size:15px;flex-shrink:0;border:2px solid ${hp?'rgba(255,255,255,0.15)':'rgba(255,255,255,0.06)'}">${n}</div>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:600;color:${hp?'var(--text)':'var(--text3)'}">${hp ? player.nome+' '+player.cognome : '— Slot libero'}</div>
+        ${hp ? `<div style="font-size:10px;color:var(--text3);margin-top:1px">${player.ruolo}</div>` : ''}
+      </div>
+      ${hp
+        ? `<button class="btn outline sm" onclick="removeBench(${n})">✕</button>`
+        : `<button class="btn sm" onclick="openAssignBenchModal(${n})">+ Assegna</button>`
+      }
+    </div>`;
+  }).join('');
+
+  // INDISPONIBILI
+  const allInj = state.players.filter(p=>p.stato==='infortunato'||p.stato==='squalificato');
+  document.getElementById('injured-list').innerHTML = `
+    <div style="margin-bottom:10px">
+      <button class="btn outline sm" onclick="openMarkInjuredModal()">+ Segna Indisponibile</button>
+    </div>
+    ${allInj.length ? allInj.map(p=>`
+      <div style="display:flex;align-items:center;gap:12px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
+        <div class="avatar" style="width:28px;height:28px;font-size:12px;background:var(--red)">${initials(p)}</div>
+        <div style="flex:1">
+          <div style="font-size:13px">${p.nome} ${p.cognome}</div>
+          <div style="margin-top:2px">${stateTag(p.stato)}</div>
+        </div>
+        <button class="btn outline sm" onclick="markAvailable(${p.id})">✓ Ok</button>
+      </div>`).join('') : '<div style="color:var(--text3);font-size:13px;padding:8px 0">Nessun indisponibile</div>'}
+  `;
+}
+
+// Assegna giocatore a uno slot titolare
+let _assignSlot = null;
+let _assignType = 'starter'; // 'starter' | 'bench'
+
+function openAssignModal(num, ruolo) {
+  _assignSlot = num; _assignType = 'starter';
+  document.getElementById('assign-slot-label').textContent = `#${num} – ${ruolo}`;
+  const available = state.players.filter(p => p.stato !== 'infortunato' && p.stato !== 'squalificato' && p.num !== num);
+  const sel = document.getElementById('assign-player-select');
+  sel.innerHTML = '<option value="">— Scegli giocatore —</option>' +
+    available.map(p=>`<option value="${p.id}">${p.nome} ${p.cognome} (#${p.num} · ${p.ruolo})</option>`).join('');
+  openModal('assign-player-modal');
+}
+
+function openAssignBenchModal(num) {
+  _assignSlot = num; _assignType = 'bench';
+  document.getElementById('assign-slot-label').textContent = `Panchina #${num}`;
+  const available = state.players.filter(p => p.stato !== 'infortunato' && p.stato !== 'squalificato' && p.num !== num);
+  const sel = document.getElementById('assign-player-select');
+  sel.innerHTML = '<option value="">— Scegli giocatore —</option>' +
+    available.map(p=>`<option value="${p.id}">${p.nome} ${p.cognome} (#${p.num} · ${p.ruolo})</option>`).join('');
+  openModal('assign-player-modal');
+}
+
+function confirmAssign() {
+  const sel = document.getElementById('assign-player-select');
+  const pid = +sel.value;
+  if(!pid) { toast('Seleziona un giocatore'); return; }
+  const player = state.players.find(p=>p.id===pid);
+  if(!player) return;
+  player.num = _assignSlot;
+  closeModal('assign-player-modal');
+  renderFormazione();
+  toast(`${player.nome} ${player.cognome} assegnato al #${_assignSlot}`);
+}
+
+function removeFromFormazione(num) {
+  const player = state.players.find(p=>p.num===num);
+  if(!player) return;
+  player.num = 99;
+  renderFormazione();
+  toast(`${player.nome} ${player.cognome} rimosso dalla formazione`);
+}
+
+function removeBench(num) {
+  const player = state.players.find(p=>p.num===num);
+  if(!player) return;
+  player.num = 99;
+  renderFormazione();
+  toast(`${player.nome} ${player.cognome} rimosso dalla panchina`);
+}
+
+// Indisponibili
+function openMarkInjuredModal() {
+  const available = state.players.filter(p=>p.stato==='disponibile');
+  const sel = document.getElementById('assign-player-select');
+  document.getElementById('assign-slot-label').textContent = 'Segna come indisponibile';
+  sel.innerHTML = '<option value="">— Scegli giocatore —</option>' +
+    available.map(p=>`<option value="${p.id}">${p.nome} ${p.cognome} · ${p.ruolo}</option>`).join('');
+  _assignType = 'injured';
+  // Modify confirm button temporarily
+  document.getElementById('assign-confirm-btn').textContent = 'Segna Indisponibile';
+  openModal('assign-player-modal');
+}
+
+function markAvailable(pid) {
+  const player = state.players.find(p=>p.id===pid);
+  if(player) { player.stato='disponibile'; renderFormazione(); toast(`${player.nome} ${player.cognome} di nuovo disponibile`); }
+}
+
+// ===== IMPOSTAZIONI =====
+function openSettingsModal() {
+  document.getElementById('set-team').value = state.settings.team;
+  document.getElementById('set-serie').value = state.settings.serie;
+  document.getElementById('set-stagione').value = state.settings.stagione;
+  openModal('settings-modal');
+}
+function saveSettings() {
+  state.settings.team = document.getElementById('set-team').value.trim() || 'La Mia Squadra';
+  state.settings.serie = document.getElementById('set-serie').value.trim() || 'Serie A';
+  state.settings.stagione = document.getElementById('set-stagione').value.trim() || '2024/25';
+  document.getElementById('team-name-display').textContent = state.settings.team + ' ✎';
+  document.getElementById('badge-serie').textContent = state.settings.serie;
+  document.getElementById('footer-stagione').textContent = state.settings.stagione;
+  document.title = 'Rugby Manager · ' + state.settings.team;
+  closeModal('settings-modal');
+  toast('✅ Impostazioni salvate!');
+}
+
+// ===== CONFIRM ASSIGN (unificato) =====
+function confirmAssignAll() {
+  const sel = document.getElementById('assign-player-select');
+  const pid = +sel.value;
+  if(!pid) { toast('Seleziona un giocatore'); return; }
+  const player = state.players.find(p=>p.id===pid);
+  if(!player) return;
+  if(_assignType === 'injured') {
+    player.stato = 'infortunato';
+    closeModal('assign-player-modal');
+    document.getElementById('assign-confirm-btn').textContent = 'Assegna';
+    renderFormazione();
+    toast(`${player.nome} ${player.cognome} segnato come indisponibile`);
+  } else {
+    player.num = _assignSlot;
+    closeModal('assign-player-modal');
+    renderFormazione();
+    toast(`${player.nome} ${player.cognome} assegnato al #${_assignSlot}`);
+  }
+}
+
+// ===== SETTINGS DISPLAY =====
+function applySettings() {
+  document.getElementById('team-name-display').textContent = state.settings.team + ' ✎';
+  document.getElementById('badge-serie').textContent = state.settings.serie;
+  document.getElementById('footer-stagione').textContent = state.settings.stagione;
+  document.title = 'Rugby Manager · ' + state.settings.team;
+}
+
+// ===== SCADENZE =====
+const STORAGE_KEY = 'rugby-manager-data';
+
+function saveToStorage() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch(e) {
+    console.warn('localStorage non disponibile:', e);
+  }
+}
+
+function loadFromStorage() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return false;
+    const loaded = JSON.parse(raw);
+    if(!loaded.players) return false;
+    // Merge preserving all keys including new ones added in updates
+    Object.keys(loaded).forEach(k => { state[k] = loaded[k]; });
+    // Ensure new state keys exist if loading old data
+    if(!state.calendario) state.calendario = [];
+    if(!state.classifica) state.classifica = [];
+    if(!state.customStats) state.customStats = [];
+    if(!state.scadenze) state.scadenze = [];
+    if(!state.quote) state.quote = [];
+    if(!state.settings) state.settings = { team:'La Mia Squadra', serie:'Serie A', stagione:'2024/25' };
+    return true;
+  } catch(e) {
+    return false;
+  }
+}
+
+// Intercept all state mutations to auto-save
+// We wrap the common write functions with a save call after each one
+function withSave(fn) {
+  return function(...args) {
+    const result = fn.apply(this, args);
+    saveToStorage();
+    return result;
+  };
+}
+
+// ===== EXPORT BACKUP =====
+function exportBackup() {
+  const data = JSON.stringify(state, null, 2);
+  const blob = new Blob([data], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const today = new Date().toISOString().slice(0,10);
+  a.href = url;
+  a.download = "rugby-manager-backup-" + today + ".json";
+  a.click();
+  URL.revokeObjectURL(url);
+  toast("💾 Backup esportato!");
+}
+
+function importData(event) {
+  const file = event.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const loaded = JSON.parse(e.target.result);
+      if(!loaded.players || !loaded.trainings || !loaded.matches) {
+        toast("⚠️ File non valido"); return;
+      }
+      Object.assign(state, loaded);
+      if(!state.calendario) state.calendario = [];
+      if(!state.classifica) state.classifica = [];
+      if(!state.customStats) state.customStats = [];
+      if(!state.scadenze) state.scadenze = [];
+      if(!state.quote) state.quote = [];
+      saveToStorage();
+      applySettings();
+      const activeNav = document.querySelector(".nav-item.active");
+      const activePage = document.querySelector(".page.active");
+      if(activePage && activeNav) {
+        const id = activePage.id.replace("page-","");
+        showPage(id, activeNav);
+      }
+      toast("📂 Backup importato correttamente!");
+    } catch(err) {
+      toast("⚠️ Errore nella lettura del file");
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = "";
+}
+
+// ===== PWA SETUP =====
+function setupPWA() {
+  // Generate inline manifest
+  const manifest = {
+    name: "Rugby Manager Pro",
+    short_name: "Rugby Mgr",
+    description: "Gestione squadra di rugby",
+    start_url: ".",
+    display: "standalone",
+    background_color: "#0a0f1a",
+    theme_color: "#0d1a10",
+    orientation: "any",
+    icons: [
+      { src: generateIcon(192), sizes: "192x192", type: "image/png" },
+      { src: generateIcon(512), sizes: "512x512", type: "image/png" }
+    ]
+  };
+  const blob = new Blob([JSON.stringify(manifest)], {type:'application/manifest+json'});
+  const manifestUrl = URL.createObjectURL(blob);
+  document.getElementById('pwa-manifest').href = manifestUrl;
+
+  // Apple touch icon
+  const iconUrl = generateIcon(180);
+  document.getElementById('apple-touch-icon').href = iconUrl;
+
+  // Service Worker inline
+  if('serviceWorker' in navigator) {
+    const swCode = `
+      const CACHE = 'rugby-manager-v1';
+      self.addEventListener('install', e => {
+        self.skipWaiting();
+      });
+      self.addEventListener('fetch', e => {
+        e.respondWith(
+          caches.match(e.request).then(r => r || fetch(e.request).catch(() => new Response('Offline')))
+        );
+      });
+    `;
+    const swBlob = new Blob([swCode], {type:'application/javascript'});
+    const swUrl = URL.createObjectURL(swBlob);
+    navigator.serviceWorker.register(swUrl).catch(()=>{});
+  }
+}
+
+function generateIcon(size) {
+  const canvas = document.createElement('canvas');
+  canvas.width = size; canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  // Background
+  ctx.fillStyle = '#0d1a10';
+  ctx.fillRect(0,0,size,size);
+  // Circle
+  ctx.fillStyle = '#c9a227';
+  ctx.beginPath();
+  ctx.arc(size/2, size/2, size*0.42, 0, Math.PI*2);
+  ctx.fill();
+  // Rugby ball shape
+  ctx.fillStyle = '#0d1a10';
+  ctx.beginPath();
+  ctx.ellipse(size/2, size/2, size*0.22, size*0.3, 0, 0, Math.PI*2);
+  ctx.fill();
+  // Text RM
+  ctx.fillStyle = '#c9a227';
+  ctx.font = `bold ${size*0.22}px sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('RM', size/2, size/2);
+  return canvas.toDataURL('image/png');
+}
+
+// Install prompt
+let _deferredInstall = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  _deferredInstall = e;
+});
+
+function showInstallGuide() {
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+  const isAndroid = /Android/.test(navigator.userAgent);
+  const isSafari = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
+  const isChrome = /Chrome/.test(navigator.userAgent);
+
+  let content = '';
+
+  if(_deferredInstall) {
+    content = `
+      <div style="text-align:center;padding:10px 0 20px">
+        <div style="font-size:48px;margin-bottom:12px">📲</div>
+        <div style="font-size:15px;font-weight:600;margin-bottom:8px">Installa Rugby Manager Pro</div>
+        <div style="font-size:13px;color:var(--text3);margin-bottom:24px">L'app verrà aggiunta alla schermata home del tuo dispositivo.</div>
+        <button class="btn" style="width:100%;padding:14px" onclick="triggerInstall()">Installa ora</button>
+      </div>`;
+  } else if(isIOS) {
+    content = `
+      <div style="font-size:13px;line-height:1.8;color:var(--text2)">
+        <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:16px">Su iPhone / iPad:</div>
+        <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:14px">
+          <div style="width:28px;height:28px;background:var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--dark);flex-shrink:0">1</div>
+          <div>Apri questa pagina in <strong>Safari</strong> (non Chrome)</div>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:14px">
+          <div style="width:28px;height:28px;background:var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--dark);flex-shrink:0">2</div>
+          <div>Tocca il pulsante <strong>Condividi</strong> in basso (icona □↑)</div>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:14px">
+          <div style="width:28px;height:28px;background:var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--dark);flex-shrink:0">3</div>
+          <div>Scorri e tocca <strong>"Aggiungi a schermata Home"</strong></div>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:12px">
+          <div style="width:28px;height:28px;background:var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--dark);flex-shrink:0">4</div>
+          <div>Tocca <strong>Aggiungi</strong> in alto a destra</div>
+        </div>
+        <div style="margin-top:20px;padding:12px;background:var(--surface2);border-radius:8px;font-size:11px;color:var(--text3)">
+          ✅ L'app apparirà sulla schermata home con l'icona Rugby Manager
+        </div>
+      </div>`;
+  } else if(isAndroid || isChrome) {
+    content = `
+      <div style="font-size:13px;line-height:1.8;color:var(--text2)">
+        <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:16px">Su Android / Chrome:</div>
+        <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:14px">
+          <div style="width:28px;height:28px;background:var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--dark);flex-shrink:0">1</div>
+          <div>Tocca i <strong>3 puntini</strong> in alto a destra nel browser</div>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:14px">
+          <div style="width:28px;height:28px;background:var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--dark);flex-shrink:0">2</div>
+          <div>Seleziona <strong>"Aggiungi a schermata Home"</strong> o <strong>"Installa app"</strong></div>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:12px">
+          <div style="width:28px;height:28px;background:var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--dark);flex-shrink:0">3</div>
+          <div>Tocca <strong>Aggiungi / Installa</strong> per confermare</div>
+        </div>
+        <div style="margin-top:20px;padding:12px;background:var(--surface2);border-radius:8px;font-size:11px;color:var(--text3)">
+          ✅ L'app apparirà sulla schermata home con l'icona Rugby Manager
+        </div>
+      </div>`;
+  } else {
+    content = `
+      <div style="font-size:13px;line-height:1.8;color:var(--text2)">
+        <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:16px">Su Desktop (Chrome / Edge):</div>
+        <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:14px">
+          <div style="width:28px;height:28px;background:var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--dark);flex-shrink:0">1</div>
+          <div>Guarda l'icona <strong>⊕</strong> nella barra degli indirizzi</div>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:14px">
+          <div style="width:28px;height:28px;background:var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--dark);flex-shrink:0">2</div>
+          <div>Clicca su di essa e scegli <strong>"Installa Rugby Manager Pro"</strong></div>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:12px">
+          <div style="width:28px;height:28px;background:var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--dark);flex-shrink:0">3</div>
+          <div>In alternativa: menu <strong>⋮ → Salva e condividi → Crea collegamento</strong></div>
+        </div>
+      </div>`;
+  }
+
+  document.getElementById('install-content').innerHTML = content;
+  openModal('install-modal');
+}
+
+function triggerInstall() {
+  if(_deferredInstall) {
+    _deferredInstall.prompt();
+    _deferredInstall.userChoice.then(()=>{ _deferredInstall=null; closeModal('install-modal'); });
+  }
+}
+
+// ===== INIT =====
+setupPWA();
+
+// Carica dati dal localStorage
+const loaded = loadFromStorage();
+applySettings();
+renderDashboard();
+renderRosa();
+
+if(loaded) {
+  // Mostra notifica discreta
+  setTimeout(()=>toast('✅ Dati caricati automaticamente'), 300);
+} else {
+  setTimeout(()=>toast('👋 Benvenuto! I dati si salvano automaticamente.'), 500);
+}
+
+// Auto-save ogni volta che lo stato cambia — hook sulle funzioni principali
+// Salvataggio automatico su ogni azione utente
+document.addEventListener('click', ()=>{
+  // Debounce save: salva 1s dopo l'ultimo click
+  clearTimeout(window._saveTimer);
+  window._saveTimer = setTimeout(saveToStorage, 1000);
+});
+
+function renderScadenze() {
+  // Populate player select in modal
+  const sel = document.getElementById('sc-player');
+  if(sel) {
+    sel.innerHTML = state.players.map(p=>`<option value="${p.id}">${p.nome} ${p.cognome}</option>`).join('');
+  }
+
+  const today = new Date(); today.setHours(0,0,0,0);
+  const warn30 = new Date(today); warn30.setDate(warn30.getDate()+30);
+
+  function statoScadenza(dataStr) {
+    if(!dataStr) return {label:'Non inserita', cls:'yellow', giorni:null};
+    const d = new Date(dataStr); d.setHours(0,0,0,0);
+    const diff = Math.ceil((d-today)/(1000*60*60*24));
+    if(diff < 0) return {label:`Scaduta ${Math.abs(diff)}g fa`, cls:'red', giorni:diff};
+    if(diff === 0) return {label:'Scade oggi!', cls:'red', giorni:0};
+    if(diff <= 30) return {label:`Scade in ${diff}g`, cls:'yellow', giorni:diff};
+    return {label:`Scade il ${dataStr}`, cls:'green', giorni:diff};
+  }
+
+  // Build rows for visita and assicurazione
+  function buildRows(tipo, tbl, extraCol) {
+    const scadType = state.scadenze.filter(s=>s.tipo===tipo);
+    // merge con tutti i giocatori
+    const rows = state.players.map(p => {
+      const sc = scadType.find(s=>s.playerId===p.id);
+      return {player:p, sc};
+    });
+    const tbody = document.querySelector(`#${tbl} tbody`);
+    if(!tbody) return;
+    tbody.innerHTML = rows.map(({player:p, sc}) => {
+      const stato = statoScadenza(sc?.dataScadenza);
+      const tagColor = {red:'red',yellow:'yellow',green:'green'}[stato.cls];
+      return `<tr>
+        <td><div class="player-cell"><div class="avatar" style="width:26px;height:26px;font-size:11px">${initials(p)}</div>${p.nome} ${p.cognome}</div></td>
+        ${extraCol ? `<td style="font-size:12px">${sc?.dataInizio||'—'}</td>` : ''}
+        <td style="font-size:12px">${sc?.dataScadenza||'—'}</td>
+        <td><span class="tag ${tagColor}">${stato.label}</span></td>
+        <td>
+          <button class="btn sm" onclick="openEditScadenza(${p.id},'${tipo}')">✎ Modifica</button>
+          ${sc ? `<button class="btn danger sm" style="margin-left:4px" onclick="removeScadenza(${p.id},'${tipo}')">✕</button>` : ''}
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  buildRows('visita', 'tbl-visita', true);
+  buildRows('assicurazione', 'tbl-assicurazione', false);
+
+  // Alert box urgenti
+  const urgenti = state.players.map(p => {
+    const vis = state.scadenze.find(s=>s.playerId===p.id&&s.tipo==='visita');
+    const ass = state.scadenze.find(s=>s.playerId===p.id&&s.tipo==='assicurazione');
+    return [
+      vis ? {player:p, tipo:'Visita Medica', stato: statoScadenza(vis.dataScadenza)} : null,
+      ass ? {player:p, tipo:'Assicurazione', stato: statoScadenza(ass.dataScadenza)} : null,
+    ].filter(Boolean);
+  }).flat().filter(x => x.stato.cls==='red' || (x.stato.cls==='yellow' && x.stato.giorni!==null));
+
+  const urgEl = document.getElementById('scadenze-urgenti');
+  if(urgenti.length > 0) {
+    urgEl.innerHTML = `<div class="card" style="border-color:rgba(192,57,43,0.4);margin-bottom:20px">
+      <div class="card-title" style="color:#e74c3c">⚠️ Attenzione — ${urgenti.length} scadenze urgenti</div>
+      ${urgenti.map(u=>`<div style="display:flex;align-items:center;gap:12px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.04)">
+        <div class="avatar" style="width:26px;height:26px;font-size:11px">${initials(u.player)}</div>
+        <div style="flex:1;font-size:13px">${u.player.nome} ${u.player.cognome} — ${u.tipo}</div>
+        <span class="tag ${u.stato.cls}">${u.stato.label}</span>
+      </div>`).join('')}
+    </div>`;
+  } else {
+    urgEl.innerHTML = '';
+  }
+}
+
+function openEditScadenza(pid, tipo) {
+  const sc = state.scadenze.find(s=>s.playerId===pid&&s.tipo===tipo);
+  document.getElementById('sc-player').value = pid;
+  document.getElementById('sc-tipo').value = tipo;
+  document.getElementById('sc-data-inizio').value = sc?.dataInizio||'';
+  document.getElementById('sc-data-scadenza').value = sc?.dataScadenza||'';
+  document.getElementById('sc-note').value = sc?.note||'';
+  openModal('add-scadenza-modal');
+}
+
+function addScadenza() {
+  const pid = +document.getElementById('sc-player').value;
+  const tipo = document.getElementById('sc-tipo').value;
+  const dataInizio = document.getElementById('sc-data-inizio').value;
+  const dataScadenza = document.getElementById('sc-data-scadenza').value;
+  if(!dataScadenza) { toast('Inserisci la data di scadenza'); return; }
+  // Rimuovi eventuale esistente
+  state.scadenze = state.scadenze.filter(s=>!(s.playerId===pid&&s.tipo===tipo));
+  state.scadenze.push({
+    id: state.nextId++, playerId:pid, tipo, dataInizio, dataScadenza,
+    note: document.getElementById('sc-note').value
+  });
+  closeModal('add-scadenza-modal');
+  renderScadenze();
+  toast('Scadenza salvata!');
+}
+
+function removeScadenza(pid, tipo) {
+  state.scadenze = state.scadenze.filter(s=>!(s.playerId===pid&&s.tipo===tipo));
+  renderScadenze();
+  toast('Scadenza rimossa');
+}
+
+// ===== QUOTE =====
+function renderQuote() {
+  const el = document.getElementById('quote-list');
+  const statBox = document.getElementById('quote-stats-boxes');
+  if(!el) return;
+
+  if(state.quote.length === 0) {
+    el.innerHTML = `<div class="card" style="text-align:center;padding:40px;color:var(--text3)">
+      Nessuna quota creata. Clicca <strong style="color:var(--gold)">+ Nuova Quota</strong> per iniziare.
+    </div>`;
+    statBox.innerHTML = '';
+    document.getElementById('quote-summary').textContent = '';
+    return;
+  }
+
+  // Stats totali
+  const totaleAtteso = state.quote.reduce((s,q)=>s+q.importo*state.players.length,0);
+  const totalePagato = state.quote.reduce((s,q)=>s+Object.values(q.pagamenti).filter(v=>v).length*q.importo,0);
+  const totaleNonPagato = totaleAtteso - totalePagato;
+  statBox.innerHTML = `
+    <div class="stat-box"><div class="num" style="font-size:28px;color:var(--green-light)">€${totalePagato}</div><div class="lbl">Incassato</div></div>
+    <div class="stat-box"><div class="num" style="font-size:28px;color:var(--red)">€${totaleNonPagato}</div><div class="lbl">Da Incassare</div></div>
+    <div class="stat-box"><div class="num" style="font-size:28px">€${totaleAtteso}</div><div class="lbl">Totale Atteso</div></div>
+  `;
+
+  el.innerHTML = state.quote.map(q => {
+    // Assicura che tutti i giocatori abbiano un entry
+    state.players.forEach(p=>{ if(q.pagamenti[p.id]===undefined) q.pagamenti[p.id]=false; });
+    const pagati = Object.values(q.pagamenti).filter(Boolean).length;
+    const totGiocatori = state.players.length;
+    const pct = totGiocatori > 0 ? Math.round(pagati/totGiocatori*100) : 0;
+    const today = new Date().toISOString().slice(0,10);
+    const scaduta = q.scadenza && q.scadenza < today;
+
+    return `<div class="card">
+      <div class="flex-between mb16">
+        <div>
+          <div class="card-title" style="margin-bottom:4px">${q.nome}</div>
+          <div style="font-size:12px;color:var(--text3)">
+            Importo: <span style="color:var(--gold);font-weight:600">€${q.importo}</span> &nbsp;·&nbsp;
+            Stagione: ${q.stagione||'—'} &nbsp;·&nbsp;
+            Scadenza: <span style="color:${scaduta?'var(--red)':'var(--text2)'}">${q.scadenza||'—'}</span>
+            ${scaduta?'<span class="tag red" style="margin-left:6px">Scaduta</span>':''}
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-family:Bebas Neue;font-size:28px;color:var(--gold)">${pct}%</div>
+          <div style="font-size:11px;color:var(--text3)">${pagati}/${totGiocatori} paganti</div>
+          <button class="btn danger sm" style="margin-top:6px" onclick="removeQuota(${q.id})">✕ Elimina</button>
+        </div>
+      </div>
+      <div class="progress mb16"><div class="progress-fill" style="width:${pct}%"></div></div>
+      <table class="tbl">
+        <thead><tr><th>Giocatore</th><th>Ruolo</th><th>Importo</th><th>Stato</th><th></th></tr></thead>
+        <tbody>
+          ${state.players.map(p=>{
+            const pagato = q.pagamenti[p.id];
+            return `<tr>
+              <td><div class="player-cell"><div class="avatar" style="width:24px;height:24px;font-size:10px">${initials(p)}</div>${p.nome} ${p.cognome}</div></td>
+              <td style="color:var(--text3);font-size:12px">${p.ruolo}</td>
+              <td style="font-family:DM Mono">€${q.importo}</td>
+              <td><span class="tag ${pagato?'green':'red'}">${pagato?'✓ Pagato':'✗ Non pagato'}</span></td>
+              <td>
+                <button class="btn ${pagato?'outline':''}  sm" onclick="togglePagamento(${q.id},${p.id})">
+                  ${pagato?'↩ Annulla':'✓ Segna Pagato'}
+                </button>
+              </td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>`;
+  }).join('');
+
+  const nonPaganti = state.quote.flatMap(q=>state.players.filter(p=>!q.pagamenti[p.id]).map(p=>p.nome));
+  document.getElementById('quote-summary').textContent = `${state.quote.length} quote · €${totalePagato} incassati`;
+}
+
+function addQuota() {
+  const nome = document.getElementById('q-nome').value.trim();
+  const importo = +document.getElementById('q-importo').value;
+  if(!nome || !importo) { toast('Inserisci nome e importo'); return; }
+  const q = {
+    id: state.nextId++,
+    nome,
+    importo,
+    scadenza: document.getElementById('q-scadenza').value,
+    stagione: document.getElementById('q-stagione').value,
+    pagamenti: {}
+  };
+  state.players.forEach(p => q.pagamenti[p.id] = false);
+  state.quote.push(q);
+  closeModal('add-quota-modal');
+  ['q-nome','q-importo','q-scadenza','q-stagione'].forEach(id=>document.getElementById(id).value='');
+  renderQuote();
+  toast(`Quota "${nome}" creata!`);
+}
+
+function removeQuota(qid) {
+  state.quote = state.quote.filter(q=>q.id!==qid);
+  renderQuote();
+  toast('Quota eliminata');
+}
+
+function togglePagamento(qid, pid) {
+  const q = state.quote.find(q=>q.id===qid);
+  if(!q) return;
+  q.pagamenti[pid] = !q.pagamenti[pid];
+  renderQuote();
+  const p = state.players.find(p=>p.id===pid);
+  toast(q.pagamenti[pid] ? `✓ ${p?.nome} ha pagato` : `↩ Pagamento annullato`);
+}
+
+// ===== CALENDARIO & CLASSIFICA =====
+function renderCalendario() {
+  renderCalList();
+  renderClassifica();
+}
+
+function renderCalList() {
+  const el = document.getElementById('cal-list');
+  if(!el) return;
+  if(state.calendario.length === 0) {
+    el.innerHTML = `<div class="card" style="text-align:center;padding:32px;color:var(--text3)">Nessuna gara in calendario. Clicca <strong style="color:var(--gold)">+ Aggiungi Gara</strong> per iniziare.</div>`;
+    return;
+  }
+  const sorted = [...state.calendario].sort((a,b)=>{
+    if(a.data && b.data) return a.data.localeCompare(b.data);
+    return (a.giornata||0)-(b.giornata||0);
+  });
+  const today = new Date().toISOString().slice(0,10);
+
+  // Group by tipo/giornata
+  el.innerHTML = sorted.map(g => {
+    const giocata = g.giocata;
+    const futura = g.data && g.data > today;
+    const oggi = g.data === today;
+    let risultatoHtml = '';
+    let borderColor = 'var(--border)';
+    let labelEsito = '';
+
+    if(giocata) {
+      const noi = g.risultatoNoi ?? 0;
+      const loro = g.risultatoLoro ?? 0;
+      const win = noi > loro, draw = noi === loro;
+      borderColor = win ? 'rgba(33,150,243,0.5)' : draw ? 'rgba(243,156,18,0.4)' : 'rgba(192,57,43,0.4)';
+      labelEsito = win ? '<span class="tag green">Vittoria</span>' : draw ? '<span class="tag yellow">Pareggio</span>' : '<span class="tag red">Sconfitta</span>';
+      risultatoHtml = `
+        <div style="text-align:center;padding:0 20px">
+          <div style="font-family:Bebas Neue;font-size:36px;color:var(--gold);letter-spacing:3px;line-height:1">${noi} – ${loro}</div>
+          ${g.mete_noi!==undefined ? `<div style="font-size:10px;color:var(--text3);margin-top:2px">${g.mete_noi} mete – ${g.mete_loro} mete</div>` : ''}
+        </div>`;
+    } else if(oggi) {
+      borderColor = 'rgba(201,162,39,0.5)';
+      labelEsito = '<span class="tag yellow">Oggi!</span>';
+      risultatoHtml = `<div style="font-family:Bebas Neue;font-size:22px;color:var(--text3);padding:0 20px">VS</div>`;
+    } else {
+      risultatoHtml = `<div style="font-family:Bebas Neue;font-size:22px;color:var(--text3);padding:0 20px">${g.ora||'VS'}</div>`;
+    }
+
+    const tipoColors = {campionato:'green',coppa:'blue',amichevole:'',playoff:'yellow'};
+    const tipoTag = `<span class="tag ${tipoColors[g.tipo]||''}" style="font-size:10px;text-transform:capitalize">${g.tipo||'campionato'}</span>`;
+
+    return `<div class="card" style="border-color:${borderColor};padding:14px 18px">
+      <div style="display:flex;align-items:center;gap:0;justify-content:space-between">
+
+        <!-- Giornata + info -->
+        <div style="min-width:120px">
+          <div style="font-size:10px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:3px">
+            ${g.giornata ? `Giornata ${g.giornata}` : ''} ${tipoTag}
+          </div>
+          <div style="font-size:11px;color:var(--text3)">${g.data||''} ${g.campo ? '· '+g.campo : ''}</div>
+        </div>
+
+        <!-- Squadre + risultato -->
+        <div style="flex:1;display:flex;align-items:center;justify-content:center;gap:12px">
+          <div style="text-align:right;min-width:120px">
+            <div style="font-size:14px;font-weight:700">${state.settings.team}</div>
+            <div style="font-size:10px;color:var(--text3)">${g.campo==='Casa'?'🏠 Casa':'✈️ Trasferta'}</div>
+          </div>
+          ${risultatoHtml}
+          <div style="min-width:120px">
+            <div style="font-size:14px;font-weight:700">${g.avv}</div>
+          </div>
+        </div>
+
+        <!-- Azioni -->
+        <div style="min-width:120px;text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+          ${labelEsito}
+          <div style="display:flex;gap:6px;margin-top:4px">
+            <button class="btn sm" onclick="openRisultato(${g.id})">✎ Risultato</button>
+            <button class="btn danger sm" onclick="removeGara(${g.id})">✕</button>
+          </div>
+        </div>
+
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderClassifica() {
+  const el = document.getElementById('classifica-container');
+  if(!el) return;
+
+  // Calcola punti per ogni squadra in base al calendario
+  const myTeam = state.settings.team;
+  const allTeams = [...new Set([
+    ...state.classifica.map(s=>s.nome),
+    myTeam
+  ])];
+
+  if(allTeams.length <= 1 && state.calendario.length === 0) {
+    el.innerHTML = `<div style="color:var(--text3);font-size:13px;text-align:center;padding:20px 0">Aggiungi le squadre del campionato per vedere la classifica.</div>`;
+    return;
+  }
+
+  // Calcola stats per ogni squadra
+  const stats = {};
+  allTeams.forEach(t => { stats[t] = {g:0,v:0,p:0,s:0,pf:0,ps:0,pt:0}; });
+
+  state.calendario.filter(g=>g.giocata && g.tipo!=='amichevole').forEach(g => {
+    const noi = g.risultatoNoi??0, loro = g.risultatoLoro??0;
+    if(!stats[myTeam]) stats[myTeam]={g:0,v:0,p:0,s:0,pf:0,ps:0,pt:0};
+    stats[myTeam].g++;
+    stats[myTeam].pf += noi;
+    stats[myTeam].ps += loro;
+    if(noi > loro) { stats[myTeam].v++; stats[myTeam].pt+=4; }
+    else if(noi === loro) { stats[myTeam].p++; stats[myTeam].pt+=2; }
+    else { stats[myTeam].s++; }
+    // Bonus punto
+    if(g.mete_noi>=4) stats[myTeam].pt++;
+    if(g.mete_loro - g.mete_noi >= 0 && loro - noi <= 7) stats[myTeam].pt++;
+
+    // Avversario
+    if(stats[g.avv]) {
+      stats[g.avv].g++;
+      stats[g.avv].pf += loro;
+      stats[g.avv].ps += noi;
+      if(loro > noi) { stats[g.avv].v++; stats[g.avv].pt+=4; }
+      else if(noi === loro) { stats[g.avv].p++; stats[g.avv].pt+=2; }
+      else { stats[g.avv].s++; }
+      if(g.mete_loro>=4) stats[g.avv].pt++;
+      if(g.mete_noi - g.mete_loro >= 0 && noi - loro <= 7) stats[g.avv].pt++;
+    }
+  });
+
+  const sorted = allTeams
+    .filter(t=>stats[t])
+    .sort((a,b)=>stats[b].pt-stats[a].pt||(stats[b].pf-stats[b].ps)-(stats[a].pf-stats[a].ps));
+
+  el.innerHTML = `<table class="tbl" style="font-size:12px">
+    <thead>
+      <tr>
+        <th>#</th><th>Squadra</th><th title="Punti">Pt</th><th title="Giocate">G</th>
+        <th title="Vittorie">V</th><th title="Pareggi">P</th><th title="Sconfitte">S</th>
+        <th title="Punti fatti / subiti">+/-</th><th></th>
+      </tr>
+    </thead>
+    <tbody>
+      ${sorted.map((t,i) => {
+        const s = stats[t];
+        const isUs = t === myTeam;
+        const diff = s.pf - s.ps;
+        return `<tr style="${isUs?'background:rgba(201,162,39,0.07)':''}">
+          <td style="font-family:Bebas Neue;font-size:15px;color:${i===0?'var(--gold)':i<3?'var(--text2)':'var(--text3)'}">${i+1}</td>
+          <td style="font-weight:${isUs?'700':'400'};color:${isUs?'var(--gold)':'var(--text)'}">${t}${isUs?' ★':''}</td>
+          <td style="font-family:DM Mono;font-weight:700;color:var(--gold)">${s.pt}</td>
+          <td style="font-family:DM Mono;color:var(--text3)">${s.g}</td>
+          <td style="font-family:DM Mono;color:var(--green-light)">${s.v}</td>
+          <td style="font-family:DM Mono;color:var(--yellow)">${s.p}</td>
+          <td style="font-family:DM Mono;color:var(--red)">${s.s}</td>
+          <td style="font-family:DM Mono;color:${diff>=0?'var(--green-light)':'var(--red)'}">${diff>=0?'+':''}${diff}</td>
+          <td>${!isUs?`<button class="btn danger sm" style="padding:2px 6px" onclick="removeSquadra('${t}')">✕</button>`:''}</td>
+        </tr>`;
+      }).join('')}
+    </tbody>
+  </table>
+  <div style="font-size:10px;color:var(--text3);margin-top:10px;line-height:1.6">
+    Pt: punti (V=4pt, P=2pt) · 4 mete = +1pt · Sconfitta con 7pt di scarto = +1pt
+  </div>`;
+}
+
+let _editGaraId = null;
+function addGara() {
+  const avv = document.getElementById('g-avv').value.trim();
+  if(!avv) { toast('Inserisci il nome dell\'avversario'); return; }
+  const g = {
+    id: state.nextId++,
+    giornata: +document.getElementById('g-giornata').value||null,
+    data: document.getElementById('g-data').value,
+    ora: document.getElementById('g-ora').value,
+    avv,
+    campo: document.getElementById('g-campo').value,
+    tipo: document.getElementById('g-tipo').value,
+    giocata: false,
+    risultatoNoi: null, risultatoLoro: null,
+    mete_noi: 0, mete_loro: 0
+  };
+  state.calendario.push(g);
+  closeModal('add-gara-modal');
+  ['g-giornata','g-avv','g-data','g-ora'].forEach(id=>document.getElementById(id).value='');
+  renderCalendario();
+  toast('Gara aggiunta al calendario!');
+}
+
+function removeGara(id) {
+  state.calendario = state.calendario.filter(g=>g.id!==id);
+  renderCalendario();
+  toast('Gara rimossa');
+}
+
+function openRisultato(id) {
+  _editGaraId = id;
+  const g = state.calendario.find(g=>g.id===id);
+  if(!g) return;
+  document.getElementById('risultato-gara-info').textContent = `${state.settings.team} vs ${g.avv} — ${g.data||''}`;
+  document.getElementById('ris-label-noi').textContent = state.settings.team;
+  document.getElementById('ris-label-loro').textContent = g.avv;
+  document.getElementById('ris-noi').value = g.risultatoNoi??'';
+  document.getElementById('ris-loro').value = g.risultatoLoro??'';
+  document.getElementById('ris-mete-noi').value = g.mete_noi??'';
+  document.getElementById('ris-mete-loro').value = g.mete_loro??'';
+  openModal('edit-risultato-modal');
+}
+
+function saveRisultato() {
+  const g = state.calendario.find(g=>g.id===_editGaraId);
+  if(!g) return;
+  g.risultatoNoi = +document.getElementById('ris-noi').value||0;
+  g.risultatoLoro = +document.getElementById('ris-loro').value||0;
+  g.mete_noi = +document.getElementById('ris-mete-noi').value||0;
+  g.mete_loro = +document.getElementById('ris-mete-loro').value||0;
+  g.giocata = true;
+  closeModal('edit-risultato-modal');
+  renderCalendario();
+  const win = g.risultatoNoi > g.risultatoLoro;
+  const draw = g.risultatoNoi === g.risultatoLoro;
+  toast(win ? '🏆 Vittoria registrata!' : draw ? '🤝 Pareggio registrato' : '📋 Risultato registrato');
+}
+
+function addSquadra() {
+  const nome = document.getElementById('sq-nome').value.trim();
+  if(!nome) { toast('Inserisci il nome della squadra'); return; }
+  if(state.classifica.find(s=>s.nome===nome)||nome===state.settings.team) {
+    toast('Squadra già presente'); return;
+  }
+  state.classifica.push({id:state.nextId++, nome});
+  closeModal('add-squadra-modal');
+  document.getElementById('sq-nome').value='';
+  renderClassifica();
+  toast(`${nome} aggiunta alla classifica!`);
+}
+
+function removeSquadra(nome) {
+  state.classifica = state.classifica.filter(s=>s.nome!==nome);
+  renderClassifica();
+  toast('Squadra rimossa');
+}
+</script>
+</body>
+</html>
